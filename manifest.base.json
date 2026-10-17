@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "version": "0.3.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "__MSG_actionTitle__",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "*://codeforces.com/*",
+    "*://*.codeforces.com/*",
+    "*://codeforces.org/*",
+    "*://*.codeforces.org/*",
+    "*://codeforc.es/*",
+    "https://translate.googleapis.com/*",
+    "https://api-free.deepl.com/*",
+    "https://api.deepl.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://codeforces.com/*",
+        "*://*.codeforces.com/*",
+        "*://codeforc.es/*"
+      ],
+      "css": ["content/theme.css"],
+      "js": [
+        "shared/defaults.js",
+        "shared/i18n.js",
+        "shared/color.js",
+        "shared/tex-protect.js",
+        "content/contrast.js",
+        "content/icons.js",
+        "content/content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "commands": {
+    "toggle-translate": {
+      "suggested_key": { "default": "Alt+Shift+T" },
+      "description": "__MSG_commandToggle__"
+    }
+  }
+}

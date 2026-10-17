@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hiraku Codeforces</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="top">
+      <div class="logo" aria-hidden="true">H</div>
+      <div class="titles">
+        <h1>Hiraku Codeforces</h1>
+        <p data-i18n="tagline">Codeforces, redesigned</p>
+      </div>
+      <label class="switch" data-i18n-title="toggleTitle" title="Turn the new look on/off">
+        <input id="enabled" type="checkbox">
+        <span></span>
+      </label>
+    </header>
+
+    <section>
+      <h2 data-i18n="appearance">Appearance</h2>
+
+      <div class="row">
+        <span class="label" data-i18n="theme">Theme</span>
+        <div class="seg" id="theme" role="group">
+          <button type="button" data-v="auto" data-i18n="themeAuto">Auto</button>
+          <button type="button" data-v="light" data-i18n="themeLight">Light</button>
+          <button type="button" data-v="dark" data-i18n="themeDark">Dark</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="label" data-i18n="accent">Accent color</span>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="row">
+        <span class="label" data-i18n="font">Font</span>
+        <select id="font">
+          <option value="system" data-i18n="fontSystem">Sans-serif (system)</option>
+          <option value="serif" data-i18n="fontSerif">Serif (reading)</option>
+          <option value="mono" data-i18n="fontMono">Monospace</option>
+        </select>
+      </div>
+
+      <div class="row col">
+        <span class="label"><span data-i18n="statementSize">Statement text size</span> <b id="fontSizeVal"></b></span>
+        <input id="fontSize" type="range" min="14" max="22" step="1">
+      </div>
+
+      <div class="row">
+        <span class="label" data-i18n="uiLanguage">Interface language</span>
+        <select id="uiLang">
+          <option value="auto" data-i18n="uiAuto">Automatic</option>
+          <option value="en">English</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-i18n="translation">Translation</h2>
+
+      <div class="row">
+        <span class="label" data-i18n="engine">Service</span>
+        <select id="engine">
+          <option value="google" data-i18n="engineGoogle">Google (free)</option>
+          <option value="deepl" data-i18n="engineDeepl">DeepL (API key)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <span class="label" data-i18n="targetLang">Translate to</span>
+        <select id="targetLang"></select>
+      </div>
+
+      <div class="row col" id="deeplRow" hidden>
+        <span class="label" data-i18n="deeplKey">DeepL API key</span>
+        <input id="deeplKey" type="password" placeholder="xxxxxxxx-xxxx-…:fx" autocomplete="off" spellcheck="false">
+        <small data-i18n="deeplHint">Stored only in this browser. Free-plan keys end with :fx.</small>
+      </div>
+
+      <label class="row check">
+        <span class="label" data-i18n="autoTranslate">Translate automatically when a problem opens</span>
+        <input id="autoTranslate" type="checkbox">
+      </label>
+
+      <div class="actions">
+        <button type="button" id="translateNow" class="primary" data-i18n="translateNow">Translate this page</button>
+        <button type="button" id="test" class="ghost" data-i18n="test">Test service</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <footer>
+      <p class="privacy" data-i18n="privacyNote">Statement text is sent to the chosen service only when you translate.</p>
+      <span data-i18n="shortcut">Shortcut:</span> <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> <span data-i18n="shortcutDesc">switches between translation and original.</span>
+    </footer>
+  </main>
+  <script src="../shared/defaults.js"></script>
+  <script src="../shared/i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

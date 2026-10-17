@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>mock</title>
+<style>
+/* CSS "original" hostil, imitando o que o Codeforces serve */
+body{background:#fff;color:#222;font:13px Arial;margin:0}
+a{color:#3b5998;text-decoration:none}
+#header{padding:8px 16px;position:relative;height:90px;background:#fff}
+#header .logo{position:absolute;left:10px;top:6px}
+.enter-exit{position:absolute;right:16px;top:30px;color:#222}
+.wow{position:absolute;right:16px;top:52px;background:#fff;border:1px solid #ccc;padding:2px 6px;color:#999;font-size:11px}
+.menu-box{margin:0 16px;background:#fff;border:1px solid #ddd;padding:6px 10px;display:flex;align-items:center;justify-content:space-between}
+.main-menu-list{list-style:none;display:flex;gap:18px;margin:0;padding:0}
+.main-menu-list a{color:#222;text-transform:uppercase}
+input.search{width:120px;height:20px;border:1px solid #aaa;background:#fff url(https://codeforces.org/icons/mag.png) no-repeat 4px center;padding-left:24px}
+.second-level-menu-list{list-style:none;display:flex;gap:6px;margin:14px 16px 0;padding:0;position:relative}
+.second-level-menu-list li{padding:4px 8px;text-transform:uppercase;font-size:11px;position:relative}
+.second-level-menu-list li.backLava{position:absolute;left:0;top:0;width:70px;height:22px;background:#ccc;border:1px solid #999}
+.second-level-menu-list li.selectedLava{background:#ccc}
+.second-level-menu-list a{color:#000}
+.wrap{display:flex;gap:20px;margin:14px 16px}
+#main{flex:1}#sidebar{width:280px}
+.datatable{position:relative;background:#e1e1e1;margin:8px 0}
+.datatable .lt,.datatable .rt,.datatable .lb,.datatable .rb{position:absolute;width:5px;height:5px;background:#fff}
+.datatable .lt{left:0;top:0}.datatable .rt{right:0;top:0}.datatable .lb{left:0;bottom:0}.datatable .rb{right:0;bottom:0}
+.datatable .ilt,.datatable .irt{position:absolute;top:0;width:6px;height:6px;background:#fff}.datatable .ilt{left:6px}.datatable .irt{right:6px}
+.datatable table{width:100%;border-collapse:collapse;background:#fff}
+.datatable th{background:#e1e1e1;color:#000;padding:4px}
+.datatable td{background:#fff;color:#222;padding:4px;border-bottom:1px solid #ddd}
+.datatable tr.dark td{background:#f0f0f0}
+.bottom-links{background:#fff}
+.roundbox{background:#fff;border:1px solid #ccc;margin:8px 0}
+.roundbox .caption{background:#e1e1e1;padding:4px 8px;color:#222}
+.user-legendary,.user-red{color:#f00}.user-blue{color:#00f}.user-gray{color:gray}.user-black{color:#000}
+.legendary-user-first-letter{color:#000}
+.topic .title a{color:#3b5998;font-size:22px;font-weight:bold}
+.catalog-title{color:#3b5998;font-size:18px;font-weight:bold}
+.info{color:#8b8b8b}
+.muted-note{color:#555}
+.contest-state-phase{color:#3b5998;background:#fff;text-align:center}
+.rtable td,.rtable th{background:#fff;color:#222}
+.rtable tr.dark td{background:#f0f0f0}
+.stripe{background:#e1e1e1;padding:4px 0 0}
+</style></head><body>
+<div id="header">
+  <a class="logo" href="/"><img id="logo" src="https://codeforces.org/icons/logo.png" width="290" height="70"></a>
+  <div class="enter-exit">icaro.lira | Logout</div>
+  <div class="wow"><img id="env" src="https://codeforces.org/icons/envelope.png" width="16" height="16"> You have <b>+120! Wow!</b></div>
+</div>
+<div class="menu-box"><ul class="main-menu-list"><li><a href="#">Home</a></li><li><a href="#">Top</a></li><li><a href="#">Contests</a></li><li><a href="#">Problemset</a></li><li><a href="#">Groups</a></li></ul>
+  <form><input class="search" type="text"></form></div>
+<ul class="second-level-menu-list"><li class="backLava"><div class="left"></div><div class="right"></div></li><li class="selectedLava"><a href="#">Problems</a></li><li><a href="#">Submit</a></li><li><a href="#">Status</a></li></ul>
+<div class="wrap"><div id="main">
+  <div class="topic"><div class="title"><a href="#">WorldQuant Round 1 (Codeforces Round 1128)</a></div>
+    <div class="info">By <a class="rated-user user-blue" href="#">SpyrosAliv</a>, 8 days ago</div>
+    <div class="content"><p style="color:#000">Black body text <a href="#" style="color:#3b5998">dark-blue link</a>, <span class="muted-note">muted note</span> and <font color="#000080">navy font</font>.</p></div></div>
+  <div class="catalog-title" id="cat">Catalog</div>
+  <div class="datatable" id="dt"><div class="lt">&nbsp;</div><div class="rt">&nbsp;</div><div class="lb">&nbsp;</div><div class="rb">&nbsp;</div>
+    <div class="stripe"><div class="ilt"></div><div class="irt"></div>
+      <table><tr><th>Group name</th><th>Role</th></tr>
+        <tr><td><a href="#" id="grp" style="color:#000;font-weight:bold">Pensão de Pet</a></td><td>Manager</td></tr>
+        <tr class="dark"><td><img src="https://codeforces.org/icons/folder.png" width="20" height="20" id="folder"> <a href="#">Folder</a></td><td><img src="https://codeforces.org/icons/star.png" width="20" height="20" id="star"></td></tr>
+        <tr><td colspan="2" class="bottom-links" id="links"><a href="#">Countries</a> | <a href="#">Cities</a> | <a href="#">Organizations</a></td></tr></table></div></div>
+  <div style="margin:8px 0"><img src="https://codeforces.org/icons/listicon.png" width="24" height="24" id="listicon"> <a href="#">All groups</a></div>
+</div>
+<div id="sidebar">
+  <div class="roundbox"><div class="caption">→ Top rated</div>
+    <table class="rtable" style="width:100%;text-align:center"><tr><th>#</th><th>User</th><th>Rating</th></tr>
+    <tr><td>1</td><td><a class="rated-user user-legendary" href="#" id="benq"><span class="legendary-user-first-letter">B</span>enq</a></td><td>3676</td></tr>
+    <tr class="dark"><td>2</td><td><a class="rated-user user-legendary" href="#"><span class="legendary-user-first-letter">j</span>iangly</a></td><td>3670</td></tr>
+    <tr><td>3</td><td><a class="rated-user user-blue" href="#">someBlue</a></td><td>1700</td></tr>
+    <tr class="dark"><td>4</td><td><a class="rated-user user-gray" href="#">newbie</a></td><td>900</td></tr></table></div>
+  <div class="roundbox"><div class="caption">Finished</div><div class="contest-state-phase" id="phase">Before contest</div><div style="background:#fff;text-align:center;font-size:20px;color:#222" id="practice">Practice</div></div>
+</div></div>
+</body></html>

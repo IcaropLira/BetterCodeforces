@@ -1,0 +1,27 @@
+{
+  "name": "hiraku-codeforces",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Chrome/Firefox extension that redesigns Codeforces (light/dark theme, auto contrast fixes) and translates problem statements without breaking TeX formulas.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test",
+    "test:e2e": "node e2e/run.mjs",
+    "lint": "web-ext lint --source-dir dist/firefox --warnings-as-errors",
+    "check": "npm test && npm run build && npm run lint",
+    "package:source": "git archive --format=zip --prefix=hiraku-codeforces/ -o dist/hiraku-codeforces-source.zip HEAD"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "playwright-core": "^1.64.1",
+    "web-ext": "^10.8.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_USER/hiraku-codeforces.git"
+  }
+}

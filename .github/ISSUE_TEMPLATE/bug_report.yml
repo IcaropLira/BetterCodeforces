@@ -1,0 +1,25 @@
+name: Visual glitch / bug
+description: Something looks wrong or doesn't work
+labels: [bug]
+body:
+  - type: input
+    id: url
+    attributes: {label: Page URL, placeholder: https://codeforces.com/...}
+    validations: {required: true}
+  - type: textarea
+    id: what
+    attributes: {label: What's wrong?, description: A screenshot helps a lot (remove anything private).}
+    validations: {required: true}
+  - type: dropdown
+    id: browser
+    attributes: {label: Browser, options: [Chrome, Edge, Brave, Firefox, Other]}
+    validations: {required: true}
+  - type: dropdown
+    id: theme
+    attributes: {label: Theme, options: [Dark, Light, Auto]}
+  - type: input
+    id: version
+    attributes: {label: Extension version}
+  - type: input
+    id: cls
+    attributes: {label: Element class or id (optional), description: Right-click → Inspect.}

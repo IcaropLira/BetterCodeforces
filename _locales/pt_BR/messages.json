@@ -1,0 +1,18 @@
+{
+  "extName": {
+    "message": "Hiraku Codeforces",
+    "description": "Nome da extensão"
+  },
+  "extDescription": {
+    "message": "Visual moderno para o Codeforces: temas claro/escuro e tradução de enunciados com um clique, sem quebrar as fórmulas TeX.",
+    "description": "Descrição curta exibida na loja (máx. 132 caracteres)"
+  },
+  "actionTitle": {
+    "message": "Hiraku Codeforces",
+    "description": "Dica do botão da barra de ferramentas"
+  },
+  "commandToggle": {
+    "message": "Traduzir o enunciado / mostrar o original",
+    "description": "Descrição do atalho de teclado"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "extName": {
+    "message": "Hiraku Codeforces",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "A modern look for Codeforces: light/dark themes and one-click problem translation that keeps LaTeX formulas intact.",
+    "description": "Short description shown in the browser store (max 132 characters)"
+  },
+  "actionTitle": {
+    "message": "Hiraku Codeforces",
+    "description": "Toolbar button tooltip"
+  },
+  "commandToggle": {
+    "message": "Translate the statement / show the original",
+    "description": "Keyboard shortcut description"
+  }
+}

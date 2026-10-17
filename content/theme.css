@@ -1,0 +1,969 @@
+/* ==========================================================================
+   Hiraku Codeforces — tema para o Codeforces
+   Tudo é controlado por variáveis. Atributos no <html> (definidos pelo
+   content script):
+     data-cfm="on|off"          liga/desliga o visual
+     data-cfm-theme="light|dark"
+   Para ajustar o visual, mexa primeiro nas variáveis abaixo.
+   ========================================================================== */
+
+:root {
+  --cfm-accent: #5b7cfa;
+  --cfm-on-accent: #ffffff;
+  --cfm-radius: 12px;
+  --cfm-statement-size: 16px;
+  --cfm-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --cfm-mono: ui-monospace, "JetBrains Mono", "Fira Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+}
+
+/* ---------- paletas ---------- */
+
+html:not([data-cfm="off"]) {
+  color-scheme: light;
+  --bg: #f3f5fa;
+  --surface: #ffffff;
+  --surface-2: #eef1f8;
+  --border: #dfe5f0;
+  --text: #1c2333;
+  --muted: #667089;
+  --link: color-mix(in srgb, var(--cfm-accent) 82%, #000 18%);
+  --sample-bg: #f8f9fd;
+  --shadow: 0 1px 2px rgba(20, 30, 60, 0.05), 0 8px 24px rgba(20, 30, 60, 0.06);
+  --ok-bg: color-mix(in srgb, #2ea043 13%, var(--surface));
+  --bad-bg: color-mix(in srgb, #e5484d 11%, var(--surface));
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-cfm="off"]):not([data-cfm-theme]) {
+    color-scheme: dark;
+    --bg: #0e121a;
+    --surface: #161b27;
+    --surface-2: #1d2434;
+    --border: #2a3347;
+    --text: #e6eaf3;
+    --muted: #94a0b8;
+    --link: color-mix(in srgb, var(--cfm-accent) 70%, #fff 30%);
+    --sample-bg: #121723;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+  }
+}
+
+html:not([data-cfm="off"])[data-cfm-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e121a;
+  --surface: #161b27;
+  --surface-2: #1d2434;
+  --border: #2a3347;
+  --text: #e6eaf3;
+  --muted: #94a0b8;
+  --link: color-mix(in srgb, var(--cfm-accent) 70%, #fff 30%);
+  --sample-bg: #121723;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & body {
+    background-color: var(--bg) !important;
+    /* brilho suave da cor de destaque no topo da página */
+    background-image: radial-gradient(1100px 420px at 50% -140px, color-mix(in srgb, var(--cfm-accent) 16%, transparent), transparent) !important;
+    background-repeat: no-repeat !important;
+    color: var(--text);
+    font-family: var(--cfm-font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  & #body,
+  & #pageContent,
+  & .content-with-sidebar,
+  & .main-content {
+    background: transparent !important;
+  }
+
+  & a:not([class*="user-"]):not([class*="rated-user"]) {
+    color: var(--link);
+    text-decoration: none;
+    transition: color 0.12s ease;
+  }
+  & a:not([class*="user-"]):not([class*="rated-user"]):hover {
+    color: var(--cfm-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  & hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  & ::selection {
+    background: color-mix(in srgb, var(--cfm-accent) 35%, transparent);
+  }
+
+  & :focus-visible {
+    outline: 2px solid var(--cfm-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Cabeçalho e menus
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & #header,
+  & .header-bar,
+  & .menu-box {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow);
+  }
+
+  & #header {
+    border-radius: 0 0 var(--cfm-radius) var(--cfm-radius);
+    border-bottom: 1px solid var(--border);
+  }
+
+  & .menu-list-container,
+  & .main-menu-list,
+  & .second-level-menu,
+  & .second-level-menu-list {
+    background: transparent !important;
+    border: 0 !important;
+  }
+
+  & .main-menu-list li a,
+  & .menu-list li a,
+  & .second-level-menu-list li a {
+    color: var(--text) !important;
+    border-radius: 8px;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  & .main-menu-list li a:hover,
+  & .menu-list li a:hover,
+  & .second-level-menu-list li a:hover {
+    background: var(--surface-2) !important;
+    color: var(--cfm-accent) !important;
+    text-decoration: none;
+  }
+  & .main-menu-list li.current a,
+  & .menu-list li.current a,
+  & .second-level-menu-list li.current a,
+  & .second-level-menu-list li.selectedLava a {
+    background: color-mix(in srgb, var(--cfm-accent) 16%, transparent) !important;
+    color: var(--cfm-accent) !important;
+    font-weight: 600;
+  }
+
+  & .second-level-menu {
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  & #header a[href="/"] img,
+  & #header .logo img {
+    background: transparent !important;
+    border-radius: 10px;
+  }
+
+  & .lang-chooser a,
+  & .lang-chooser {
+    color: var(--muted) !important;
+  }
+}
+
+/* ==========================================================================
+   Caixas (roundbox) e barra lateral
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & .roundbox-lt,
+  & .roundbox-rt,
+  & .roundbox-lb,
+  & .roundbox-rb {
+    display: none !important;
+  }
+
+  & .roundbox {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--cfm-radius) !important;
+    box-shadow: var(--shadow);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  & .roundbox .caption,
+  & .roundbox .titled,
+  & .roundbox .rtable .caption {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+
+  & .sidebox .roundbox,
+  & #sidebar .roundbox {
+    margin-bottom: 16px;
+  }
+
+  & .info,
+  & .comment-table,
+  & .topic .info {
+    color: var(--muted);
+  }
+
+  /* título do blog / das caixas (vinha em azul-marinho, ilegível no escuro) */
+  & .topic .title,
+  & .topic .title *,
+  & div.title a,
+  & div.title a * {
+    color: var(--text) !important;
+  }
+  & .topic .title a {
+    font-weight: 700;
+  }
+}
+
+/* ==========================================================================
+   Tabelas (problemas, submissões, classificação)
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & .datatable {
+    background: var(--surface) !important;
+    border-radius: var(--cfm-radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  & .datatable .lt,
+  & .datatable .rt,
+  & .datatable .lb,
+  & .datatable .rb,
+  & .datatable .bottom-border {
+    display: none !important;
+  }
+
+  & table {
+    border-color: var(--border);
+  }
+  & table.problems,
+  & table.status-frame-datatable,
+  & table.standings,
+  & .datatable table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    color: var(--text);
+  }
+
+  & .datatable th,
+  & table.problems th,
+  & table.standings th,
+  & table.status-frame-datatable th {
+    background: var(--surface-2) !important;
+    color: var(--muted) !important;
+    font-weight: 600;
+    font-size: 0.82em;
+    letter-spacing: 0.02em;
+    border: 0 !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  & .datatable td,
+  & table.problems td,
+  & table.standings td,
+  & table.status-frame-datatable td {
+    background: var(--surface) !important;
+    color: var(--text);
+    border: 0 !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  & .datatable tr.dark td,
+  & table.problems tr:nth-child(even) td,
+  & table.standings tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)) !important;
+  }
+
+  & .datatable tr:hover td,
+  & table.problems tr:hover td {
+    background: color-mix(in srgb, var(--cfm-accent) 9%, var(--surface)) !important;
+  }
+
+  & tr.accepted-problem td,
+  & .accepted-problem td {
+    background: var(--ok-bg) !important;
+  }
+  & tr.rejected-problem td,
+  & .rejected-problem td {
+    background: var(--bad-bg) !important;
+  }
+
+  & .highlighted-row td,
+  & tr.highlighted-row td {
+    background: color-mix(in srgb, var(--cfm-accent) 14%, var(--surface)) !important;
+  }
+
+  & .pagination,
+  & .page-index a,
+  & .page-index span {
+    color: var(--text);
+  }
+  & .page-index.active a,
+  & .pagination .active a {
+    background: var(--cfm-accent) !important;
+    color: var(--cfm-on-accent) !important;
+    border-radius: 6px;
+  }
+}
+
+/* ==========================================================================
+   Formulários e botões
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & input[type="text"],
+  & input[type="password"],
+  & input[type="number"],
+  & input[type="email"],
+  & input[type="search"],
+  & input[type="url"],
+  & select:not(.cfm-lang),
+  & textarea {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4em 0.65em;
+    font-family: inherit;
+  }
+  & input[type="text"]:focus,
+  & input[type="password"]:focus,
+  & input[type="number"]:focus,
+  & input[type="email"]:focus,
+  & select:focus,
+  & textarea:focus {
+    outline: none;
+    border-color: var(--cfm-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cfm-accent) 25%, transparent);
+  }
+
+  & input[type="submit"],
+  & input[type="button"],
+  & button:not(.cfm-btn),
+  & .submit,
+  & a.button {
+    background: var(--cfm-accent) !important;
+    color: var(--cfm-on-accent) !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    padding: 0.45em 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.12s ease;
+  }
+  & input[type="submit"]:hover,
+  & input[type="button"]:hover,
+  & button:not(.cfm-btn):hover,
+  & .submit:hover {
+    filter: brightness(1.08);
+  }
+}
+
+/* ==========================================================================
+   Cores de rating (mantidas) — só ajustes de legibilidade no escuro
+   ========================================================================== */
+
+html:not([data-cfm="off"])[data-cfm-theme="dark"] {
+  /* logo: inverte (fundo branco vira preto) e o "screen" apaga o preto */
+  & #header a[href="/"] img,
+  & #header .logo img {
+    filter: invert(1) hue-rotate(180deg) saturate(1.6) brightness(1.3);
+    mix-blend-mode: screen;
+  }
+
+  /* cores de rating mais claras: o azul/violeta/preto originais somem no escuro */
+  & .user-black,
+  & .legendary-user-first-letter,
+  & .user-legendary > span:first-child,
+  & .rated-user [style*="color: black" i],
+  & .rated-user [style*="color:black" i],
+  & .rated-user [style*="color: #000" i],
+  & .rated-user [style*="color:#000" i],
+  & .rated-user [style*="rgb(0, 0, 0)"] {
+    color: #f4f6fb !important;
+  }
+  & .user-gray { color: #9aa3b5 !important; }
+  & .user-green { color: #3fbf63 !important; }
+  & .user-cyan { color: #2ed3c4 !important; }
+  & .user-blue { color: #6f8dff !important; }
+  & .user-violet { color: #d377e6 !important; }
+  & .user-orange { color: #ffa73d !important; }
+  & .user-red,
+  & .user-legendary { color: #ff5d5d !important; }
+  & .user-admin { color: #ff8a8a !important; }
+
+  /* veredictos */
+  & .verdict-accepted,
+  & .cell-accepted { color: #3fbf63 !important; }
+  & .verdict-rejected,
+  & .cell-rejected { color: #ff6b6b !important; }
+
+  /* texto "preto" colocado à mão em blogs/comentários */
+  & [style*="color: black" i],
+  & [style*="color:black" i],
+  & [style*="color: #000" i],
+  & [style*="color:#000" i],
+  & [style*="color: rgb(0, 0, 0)" i] {
+    color: var(--text) !important;
+  }
+
+  /* calendário de atividade do perfil: células vazias claras viravam "buracos" brancos */
+  & rect[fill="#ebedf0" i],
+  & rect[fill="#eeeeee" i],
+  & rect[fill="#ededed" i] {
+    fill: var(--surface-2) !important;
+  }
+  & [style*="background-color: rgb(235, 237, 240)"],
+  & [style*="background-color:#ebedf0" i],
+  & [style*="background: #ebedf0" i] {
+    background-color: var(--surface-2) !important;
+  }
+
+  /* ícones marcados pela extensão (ver content/icons.js):
+     fundo claro → inverte e deixa o "preto" transparente; desenho preto → fica branco */
+  & img[data-cfm-icon="light"] {
+    filter: invert(1) hue-rotate(180deg) saturate(1.2) brightness(1.1);
+    mix-blend-mode: screen;
+  }
+  & img[data-cfm-icon="dark"] {
+    filter: invert(1);
+  }
+}
+
+/* ==========================================================================
+   Enunciado do problema
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & .problem-statement {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--cfm-radius) + 4px);
+    padding: 28px clamp(18px, 4vw, 42px) 34px;
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font-family: var(--cfm-font);
+    font-size: var(--cfm-statement-size);
+    line-height: 1.7;
+  }
+
+  & .problem-statement p {
+    margin: 0 0 0.95em;
+  }
+  & .problem-statement ul,
+  & .problem-statement ol {
+    padding-left: 1.5em;
+    margin: 0 0 1em;
+  }
+  & .problem-statement li {
+    margin: 0.25em 0;
+  }
+
+  /* cabeçalho: título + limites como "chips" */
+  & .problem-statement .header {
+    text-align: left;
+    margin: 0 0 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  & .problem-statement .header .title {
+    text-align: left;
+    font-size: 1.7em;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+  & .problem-statement .header > div:not(.title) {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45em;
+    margin: 0 8px 6px 0;
+    padding: 4px 12px;
+    background: var(--surface-2);
+    border-radius: 999px;
+    font-size: 0.8em;
+    line-height: 1.5;
+  }
+  & .problem-statement .header .property-title {
+    display: inline;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  & .problem-statement .section-title {
+    margin: 28px 0 10px;
+    padding: 0;
+    font-size: 1.05em;
+    font-weight: 700;
+    color: var(--cfm-accent);
+    letter-spacing: 0.01em;
+  }
+
+  /* exemplos */
+  & .problem-statement .sample-tests .section-title {
+    margin-top: 30px;
+  }
+  & .problem-statement .sample-test .input,
+  & .problem-statement .sample-test .output {
+    margin: 0 0 14px;
+    background: var(--sample-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  & .problem-statement .sample-test .title {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    padding: 7px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82em;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: none;
+  }
+  & .problem-statement .sample-test pre {
+    margin: 0;
+    padding: 12px 16px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--cfm-mono);
+    font-size: 0.88em;
+    line-height: 1.55;
+    overflow-x: auto;
+    border: 0;
+  }
+  & .problem-statement .test-example-line-even {
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent) !important;
+  }
+  & .problem-statement .input-output-copier {
+    position: static !important;
+    float: none !important;
+    margin: 0;
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: var(--cfm-accent) !important;
+    color: var(--cfm-on-accent) !important;
+    font-size: 0.95em;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  & .problem-statement .note {
+    margin-top: 6px;
+  }
+
+  /* imagens do enunciado (diagramas costumam ter fundo transparente) */
+  & .problem-statement img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+  & .problem-statement img:not(.tex-formula) {
+    background: #fff;
+  }
+
+  /* código inline e blocos fora dos exemplos */
+  & .ttypography pre,
+  & .ttypography code {
+    font-family: var(--cfm-mono);
+    background: var(--surface-2);
+    color: var(--text);
+    border-radius: 6px;
+  }
+  & .ttypography code {
+    padding: 0.1em 0.4em;
+  }
+  & .ttypography pre {
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  & .ttypography pre code {
+    padding: 0;
+    background: transparent;
+  }
+
+  /* o MathJax herda a cor do texto */
+  & .problem-statement .MathJax,
+  & .problem-statement .MathJax_Display,
+  & .problem-statement mjx-container {
+    color: var(--text);
+  }
+}
+
+/* fórmulas antigas (imagens PNG pretas) no tema escuro */
+html:not([data-cfm="off"])[data-cfm-theme="dark"] {
+  & img.tex-formula {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  /* realce de sintaxe (prettify) em tons que funcionam no escuro */
+  & .prettyprint .kwd { color: #8fb4ff; }
+  & .prettyprint .typ { color: #7fd6c2; }
+  & .prettyprint .str,
+  & .prettyprint .atv { color: #f2a97e; }
+  & .prettyprint .lit { color: #e6c07b; }
+  & .prettyprint .com { color: #6f7b94; }
+  & .prettyprint .pun,
+  & .prettyprint .pln { color: var(--text); }
+  & .prettyprint .tag { color: #8fb4ff; }
+  & .prettyprint .atn { color: #7fd6c2; }
+}
+
+/* ==========================================================================
+   Contraste e correções
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  /* ---- MathJax: fórmulas sempre na cor do texto (no escuro saíam pretas) ---- */
+  & .MathJax,
+  & .MathJax *,
+  & .MathJax_Display,
+  & .MathJax_Display *,
+  & mjx-container,
+  & mjx-container * {
+    color: var(--text) !important;
+    border-color: currentColor !important;
+  }
+  & .MathJax svg *,
+  & mjx-container svg * {
+    fill: currentColor !important;
+    stroke: currentColor !important;
+  }
+
+  /* ---- tabelas da barra lateral (.rtable): Top rated, contest, etc. ---- */
+  & table.rtable,
+  & .rtable {
+    background: transparent !important;
+    color: var(--text);
+  }
+  & .rtable th,
+  & .rtable td {
+    background: transparent !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  & .rtable th {
+    background: var(--surface-2) !important;
+    color: var(--muted) !important;
+    font-weight: 600;
+    font-size: 0.85em;
+  }
+  & .rtable tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--surface-2) 55%, transparent) !important;
+  }
+  & .rtable tr:hover td {
+    background: color-mix(in srgb, var(--cfm-accent) 9%, transparent) !important;
+  }
+
+  /* caixa "Before contest / Finished / Practice" */
+  & [class*="contest-state"] {
+    background: transparent !important;
+    color: var(--text) !important;
+  }
+  & .contest-state-phase {
+    color: var(--cfm-accent) !important;
+    font-weight: 600;
+  }
+  & .countdown {
+    color: var(--muted) !important;
+  }
+
+  /* ---- abas do segundo nível: o "lava" (fundo da aba atual) vinha cinza ---- */
+  /* o "lava" é uma pílula cinza que acompanha o mouse; a aba atual já tem destaque próprio */
+  & .backLava,
+  & .backLava > * {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    display: none !important;
+  }
+  & .second-level-menu-list li a {
+    color: var(--text) !important;
+  }
+  & .second-level-menu-list li,
+  & .second-level-menu-list li.selectedLava {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  & .second-level-menu-list li.selectedLava a {
+    color: var(--cfm-accent) !important;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--cfm-accent) 16%, transparent) !important;
+    border-radius: 8px;
+  }
+
+  /* ---- busca do cabeçalho ---- */
+  & #header input[type="text"],
+  & #header input[type="search"],
+  & #header input:not([type]),
+  & .menu-box input[type="text"],
+  & .menu-box input:not([type]),
+  & input.search,
+  & input[name="query"] {
+    background-color: var(--surface-2) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a0b8' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: 9px center !important;
+    background-size: 15px !important;
+    padding-left: 30px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
+    color: var(--text) !important;
+  }
+
+  /* ---- texto de blogs, comentários e anúncios (vinha cinza-escuro no escuro) ---- */
+  & .ttypography,
+  & .ttypography :is(p, li, b, strong, i, em, u, h1, h2, h3, h4, h5, h6, td, th, blockquote, center, div, font),
+  & .comment-content,
+  & .topic .content {
+    color: var(--text);
+  }
+  & .topic .content {
+    border-color: var(--border) !important;
+  }
+  & .ttypography blockquote {
+    margin: 1em 0;
+    padding: 0.2em 1em;
+    border-left: 3px solid var(--cfm-accent);
+    background: var(--surface-2);
+    border-radius: 0 8px 8px 0;
+  }
+  & .comment-table,
+  & .comment {
+    background: transparent !important;
+    color: var(--text);
+  }
+
+  /* ---- campos de arquivo e etiquetas ---- */
+  & input[type="file"] {
+    color: var(--muted);
+  }
+  & input[type="file"]::file-selector-button {
+    margin-right: 0.7em;
+    padding: 0.35em 0.9em;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+  }
+  & .tag-box,
+  & a.tag-box {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
+    padding: 1px 10px !important;
+    transition: border-color 0.12s ease, color 0.12s ease;
+  }
+  & .tag-box:hover {
+    border-color: var(--cfm-accent) !important;
+    color: var(--cfm-accent) !important;
+    text-decoration: none;
+  }
+}
+
+/* ==========================================================================
+   Polimento
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  scroll-behavior: smooth;
+  scrollbar-color: color-mix(in srgb, var(--muted) 50%, transparent) transparent;
+
+  & pre,
+  & .roundbox,
+  & .problem-statement {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted) 50%, transparent) transparent;
+  }
+
+  /* barrinha de destaque nos títulos de seção do enunciado */
+  & .problem-statement .section-title::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 1em;
+    margin-right: 0.55em;
+    vertical-align: -0.12em;
+    border-radius: 3px;
+    background: var(--cfm-accent);
+  }
+
+  /* exemplos reagem ao mouse */
+  & .problem-statement .sample-test .input,
+  & .problem-statement .sample-test .output {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  & .problem-statement .sample-test .input:hover,
+  & .problem-statement .sample-test .output:hover {
+    border-color: color-mix(in srgb, var(--cfm-accent) 45%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cfm-accent) 10%, transparent);
+  }
+
+  /* título do problema com um toque de cor */
+  & .problem-statement .header .title {
+    background: linear-gradient(100deg, var(--text) 55%, var(--cfm-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* cartões e imagens */
+  & .roundbox {
+    transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  & .roundbox:hover {
+    border-color: color-mix(in srgb, var(--cfm-accent) 30%, var(--border)) !important;
+  }
+  & #pageContent img,
+  & .roundbox img {
+    border-radius: 6px;
+  }
+  & #header img,
+  & .roundbox .rtable img,
+  & img.tex-formula {
+    border-radius: 0;
+  }
+
+  /* cabeçalho do enunciado: limites em "chips" com realce na cor */
+  & .problem-statement .header .property-title + * {
+    font-weight: 600;
+  }
+
+  /* o cartão do enunciado alinha com a barra de tradução e com as abas */
+  & .problem-statement {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* cantinhos de imagem das tabelas/caixas antigas (apareciam como quadradinhos brancos) */
+  & :is(.datatable, .roundbox) :is(.ilt, .irt, .ilb, .irb, .lt, .rt, .lb, .rb) {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-cfm="off"]) {
+    scroll-behavior: auto;
+    & * {
+      transition: none !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Rodapé
+   ========================================================================== */
+
+html:not([data-cfm="off"]) {
+  & #footer {
+    background: transparent !important;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+  & #footer a {
+    color: var(--muted) !important;
+  }
+}
+
+/* ==========================================================================
+   Barra de tradução (vale mesmo com o tema desligado — tem valores de reserva)
+   ========================================================================== */
+
+.cfm-toolbar {
+  position: sticky;
+  top: 8px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface, #ffffff) 84%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+  color: var(--text, #1c2333);
+  border: 1px solid var(--border, #dfe5f0);
+  border-radius: 14px;
+  box-shadow: var(--shadow, 0 4px 18px rgba(20, 30, 60, 0.12));
+  font: 500 13px/1.2 var(--cfm-font);
+}
+
+.cfm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--cfm-accent);
+  color: var(--cfm-on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s ease, background 0.12s ease;
+}
+.cfm-btn:hover:not([disabled]) {
+  filter: brightness(1.08);
+}
+.cfm-btn[disabled] {
+  opacity: 0.75;
+  cursor: progress;
+}
+.cfm-btn.is-active {
+  background: var(--surface-2, #eef1f8);
+  color: var(--text, #1c2333);
+  border-color: var(--border, #dfe5f0);
+}
+
+.cfm-lang {
+  padding: 7px 10px;
+  border: 1px solid var(--border, #dfe5f0);
+  border-radius: 10px;
+  background: var(--surface-2, #eef1f8);
+  color: var(--text, #1c2333);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cfm-status {
+  margin-left: auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted, #667089);
+  font-size: 12px;
+}
+
+.cfm-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background: var(--cfm-accent);
+  transition: width 0.2s ease;
+}
