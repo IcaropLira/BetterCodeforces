@@ -46,6 +46,7 @@
     html.style.setProperty('--cfm-statement-size', `${Number(s.fontSize) || 16}px`);
     T = I18N.make(s.uiLang);
     syncEngines();
+    syncLayout();
   }
 
   // Motor de contraste e tratamento de ícones: só no tema escuro.
@@ -54,8 +55,18 @@
     const dark = settings.enabled && html.getAttribute('data-cfm-theme') === 'dark';
     if (dark === enginesOn) return;
     enginesOn = dark;
-    const engines = [globalThis.CFM_CONTRAST, globalThis.CFM_ICONS];
+    const engines = [globalThis.CFM_CONTRAST, globalThis.CFM_BRAND, globalThis.CFM_ICONS];
     for (const e of engines) if (e) dark ? e.start() : e.stop();
+  }
+
+  // Respiro do cabeçalho: vale nos dois temas, só não com o visual desligado.
+  let layoutOn = false;
+  function syncLayout() {
+    const on = !!settings.enabled;
+    if (on === layoutOn) return;
+    layoutOn = on;
+    const l = globalThis.CFM_LAYOUT;
+    if (l) on ? l.start() : l.stop();
   }
 
   async function loadSettings() {

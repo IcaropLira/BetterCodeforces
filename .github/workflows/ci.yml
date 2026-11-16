@@ -16,6 +16,8 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run lint
+      - name: End-to-end (Chrome real com a extensão carregada)
+        run: CHROMIUM_PATH="$(which google-chrome)" npm run test:e2e
       - uses: actions/upload-artifact@v4
         with:
           name: extension-builds

@@ -35,11 +35,38 @@ The same Chrome zip works for **Microsoft Edge Add-ons** (free): <https://partne
 5. Source code: nothing is minified or bundled, so none is strictly required. To be safe, attach `npm run package:source` output and paste the *Notes to reviewer* from [STORE_LISTING.md](STORE_LISTING.md).
 6. Fill the listing (summary, description, categories, screenshots, privacy policy URL, license **MIT**) and submit. New listed add-ons go through automatic checks and may get a manual review.
 
-## 3. Releasing updates
+## 3. Releasing updates (automatic)
 
-1. Bump `version` in **both** `package.json` and `manifest.base.json` (the build refuses to run if they differ), update `CHANGELOG.md`.
-2. `npm run check`, commit, then tag: `git tag v0.3.1 && git push --tags`. The *Release* workflow builds the zips and attaches them to a GitHub Release.
-3. Upload the new zips to each store (versions must increase).
+After the **first** manual submission to each store (sections 1 and 2), every update is one command:
+
+```bash
+# 1. write what changed under "## Unreleased" in CHANGELOG.md
+# 2. then:
+npm run release -- patch --push      # or: minor | major | 1.2.3
+```
+
+The script checks that the git tree is clean, moves `## Unreleased` to the new version, bumps `package.json`, `package-lock.json` and `manifest.base.json`, runs `npm run check`, commits, tags `vX.Y.Z` and pushes. Pushing the tag starts the **Release** workflow (`.github/workflows/release.yml`), which:
+
+1. runs the tests and builds `hiraku-codeforces-<version>-chrome.zip` and `…-firefox.zip` (plus the source zip);
+2. creates the **GitHub Release** with the CHANGELOG notes and the zips attached;
+3. uploads the Chrome zip to the **Chrome Web Store** and submits the Firefox build to **addons.mozilla.org**, if the secrets below exist. Without them each store job is skipped and the zips are still on the GitHub Release, so you can upload by hand.
+
+`npm run release -- patch --no-git` only updates the files and builds the zips in `dist/` (no commit, no tag).
+
+### One-time setup of the store secrets
+
+Repository → *Settings → Secrets and variables → Actions*.
+
+**Chrome Web Store** (secrets `CWS_EXTENSION_ID`, `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`):
+- `CWS_EXTENSION_ID`: the item ID shown in the Developer Dashboard.
+- The other three come from a Google Cloud OAuth client with the *Chrome Web Store API* enabled; follow the [chrome-webstore-upload-cli guide](https://github.com/fregante/chrome-webstore-upload-keys) to generate the refresh token.
+
+**Firefox Add-ons**:
+- secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`: [addons.mozilla.org → Tools → Manage API Keys](https://addons.mozilla.org/developers/addon/api/key/).
+- *variable* (not secret) `GECKO_ID`: the add-on ID you chose in section 0. It must be identical on every release.
+- The very first AMO submission has to be done by hand (section 2) so the listing exists; later versions are submitted by the workflow and then wait for Mozilla's review.
+
+Store reviews still take time: the workflow only *submits*; the new version goes live when the store approves it.
 
 ## 4. Things that commonly get extensions rejected
 

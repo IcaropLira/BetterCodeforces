@@ -11,6 +11,7 @@
   --cfm-accent: #5b7cfa;
   --cfm-on-accent: #ffffff;
   --cfm-radius: 12px;
+  --cfm-gutter: 18px; /* respiro lateral do cabeçalho (logo, bandeiras, usuário) */
   --cfm-statement-size: 16px;
   --cfm-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --cfm-mono: ui-monospace, "JetBrains Mono", "Fira Code", "SF Mono", Consolas, "Liberation Mono", monospace;
@@ -29,8 +30,10 @@ html:not([data-cfm="off"]) {
   --link: color-mix(in srgb, var(--cfm-accent) 82%, #000 18%);
   --sample-bg: #f8f9fd;
   --shadow: 0 1px 2px rgba(20, 30, 60, 0.05), 0 8px 24px rgba(20, 30, 60, 0.06);
-  --ok-bg: color-mix(in srgb, #2ea043 13%, var(--surface));
-  --bad-bg: color-mix(in srgb, #e5484d 11%, var(--surface));
+  --ok: #2ea043;
+  --bad: #e5484d;
+  --ok-bg: color-mix(in srgb, var(--ok) 13%, var(--surface));
+  --bad-bg: color-mix(in srgb, var(--bad) 11%, var(--surface));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -165,8 +168,13 @@ html:not([data-cfm="off"]) {
   & #header a[href="/"] img,
   & #header .logo img {
     background: transparent !important;
-    border-radius: 10px;
+    border-radius: 0;
   }
+
+  /* o content/layout.js marca o que está encostado na borda do cartão */
+  & [data-cfm-edge~="r"] { margin-right: var(--cfm-gutter) !important; }
+  & [data-cfm-edge~="l"] { margin-left: var(--cfm-gutter) !important; }
+  & [data-cfm-edge~="t"] { margin-top: 8px !important; }
 
   & .lang-chooser a,
   & .lang-chooser {
@@ -281,8 +289,8 @@ html:not([data-cfm="off"]) {
     border-bottom: 1px solid var(--border) !important;
   }
 
-  & .datatable tr.dark td,
-  & table.problems tr:nth-child(even) td,
+  & .datatable tr.dark:not(.accepted-problem, .rejected-problem, :has(.accepted-problem, .rejected-problem)) td,
+  & table.problems tr:nth-child(even):not(.accepted-problem, .rejected-problem, :has(.accepted-problem, .rejected-problem)) td,
   & table.standings tr:nth-child(even) td {
     background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)) !important;
   }
@@ -292,13 +300,33 @@ html:not([data-cfm="off"]) {
     background: color-mix(in srgb, var(--cfm-accent) 9%, var(--surface)) !important;
   }
 
-  & tr.accepted-problem td,
-  & .accepted-problem td {
+  /* Problemas resolvidos / com tentativa errada: a linha INTEIRA recebe o mesmo
+     tratamento (fundo suave + barra lateral), seja qual for a posição na zebra.
+     O Codeforces marca a <tr> ou só as <td>, então cobrimos os dois casos. */
+  & table.problems tr:is(.accepted-problem, :has(> td.accepted-problem)) > td,
+  & .datatable tr:is(.accepted-problem, :has(> td.accepted-problem)) > td {
     background: var(--ok-bg) !important;
   }
-  & tr.rejected-problem td,
-  & .rejected-problem td {
+  & table.problems tr:is(.accepted-problem, :has(> td.accepted-problem)) > td:first-child,
+  & .datatable tr:is(.accepted-problem, :has(> td.accepted-problem)) > td:first-child {
+    box-shadow: inset 4px 0 0 var(--ok);
+  }
+  & table.problems tr:is(.accepted-problem, :has(> td.accepted-problem)):hover > td,
+  & .datatable tr:is(.accepted-problem, :has(> td.accepted-problem)):hover > td {
+    background: color-mix(in srgb, var(--ok) 22%, var(--surface)) !important;
+  }
+
+  & table.problems tr:is(.rejected-problem, :has(> td.rejected-problem)) > td,
+  & .datatable tr:is(.rejected-problem, :has(> td.rejected-problem)) > td {
     background: var(--bad-bg) !important;
+  }
+  & table.problems tr:is(.rejected-problem, :has(> td.rejected-problem)) > td:first-child,
+  & .datatable tr:is(.rejected-problem, :has(> td.rejected-problem)) > td:first-child {
+    box-shadow: inset 4px 0 0 var(--bad);
+  }
+  & table.problems tr:is(.rejected-problem, :has(> td.rejected-problem)):hover > td,
+  & .datatable tr:is(.rejected-problem, :has(> td.rejected-problem)):hover > td {
+    background: color-mix(in srgb, var(--bad) 20%, var(--surface)) !important;
   }
 
   & .highlighted-row td,
@@ -377,11 +405,22 @@ html:not([data-cfm="off"]) {
    ========================================================================== */
 
 html:not([data-cfm="off"])[data-cfm-theme="dark"] {
-  /* logo: inverte (fundo branco vira preto) e o "screen" apaga o preto */
-  & #header a[href="/"] img,
-  & #header .logo img {
-    filter: invert(1) hue-rotate(180deg) saturate(1.6) brightness(1.3);
+  /* logo e selo do patrocinador: o content/brand.js troca a imagem por uma versão tratada
+     (fundo transparente, texto claro, cores vivas intactas). Enquanto isso não chega,
+     escondemos para não piscar o original; se falhar, vale um filtro simples de reserva. */
+  & img[data-cfm-brand]:not([data-cfm-ready]) {
+    opacity: 0;
+  }
+  & img[data-cfm-brand][data-cfm-ready] {
+    opacity: 1;
+    transition: opacity 0.15s ease;
+  }
+  & img[data-cfm-brand="logo"][data-cfm-ready="fail"] {
+    filter: invert(1) hue-rotate(180deg);
     mix-blend-mode: screen;
+  }
+  & img[data-cfm-brand="badge"][data-cfm-ready="fail"] {
+    border-radius: 14px;
   }
 
   /* cores de rating mais claras: o azul/violeta/preto originais somem no escuro */

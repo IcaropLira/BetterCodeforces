@@ -35,7 +35,7 @@
   }
 
   function consider(img) {
-    if (!active || img.dataset.cfmIcon !== undefined) return;
+    if (!active || img.dataset.cfmIcon !== undefined || img.dataset.cfmBrand !== undefined) return;
     const src = img.currentSrc || img.src;
     if (!src || !/^https:/i.test(src) || SKIP_SRC.test(src) || img.closest(SKIP_PARENT)) return;
     let host = '';

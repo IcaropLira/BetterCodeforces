@@ -1,26 +1,127 @@
 name: Release
+
+# Fluxo: `npm run release -- patch --push` → tag vX.Y.Z → este workflow:
+#   1. testa e gera os pacotes (Chrome e Firefox) + o código-fonte
+#   2. cria a GitHub Release com as notas do CHANGELOG e os .zip anexados
+#   3. envia a versão nova para a Chrome Web Store e para o Firefox Add-ons
+#      (cada loja só roda se os segredos dela estiverem configurados — veja docs/PUBLISHING.md)
 on:
   push:
     tags: ['v*']
+  workflow_dispatch: # roda só o build (sem Release nem lojas) a partir de um branch
+
 permissions:
   contents: write
+
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - id: v
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Tag must match package.json version
-        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+        if: github.ref_type == 'tag'
+        run: test "v${{ steps.v.outputs.version }}" = "$GITHUB_REF_NAME"
       - run: npm ci
       - run: npm test
       - run: npm run build
+        env:
+          GECKO_ID: ${{ vars.GECKO_ID }} # variável do repositório (Settings → Variables)
       - run: npm run lint
       - run: npm run package:source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  github-release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - run: node scripts/changelog-notes.mjs "$GITHUB_REF_NAME" > release-notes.md
       - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: release-notes.md
           files: dist/*.zip
+
+  chrome-web-store:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    env:
+      EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+      CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+    steps:
+      - name: Chrome Web Store secrets configured?
+        id: gate
+        run: echo "ok=${{ env.REFRESH_TOKEN != '' && env.EXTENSION_ID != '' }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          name: dist
+          path: dist
+      - name: Upload and submit for review
+        if: steps.gate.outputs.ok == 'true'
+        run: >
+          npx --yes chrome-webstore-upload-cli@3 upload
+          --source "dist/hiraku-codeforces-${{ needs.build.outputs.version }}-chrome.zip"
+          --auto-publish
+      - name: Skipped (no secrets)
+        if: steps.gate.outputs.ok != 'true'
+        run: |
+          echo "::notice::Chrome Web Store ignorada (sem segredos CWS_*). Veja docs/PUBLISHING.md"
+
+  firefox-addons:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    env:
+      WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+      WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+      GECKO_ID: ${{ vars.GECKO_ID }}
+    steps:
+      - name: Firefox Add-ons secrets configured?
+        id: gate
+        run: echo "ok=${{ env.WEB_EXT_API_KEY != '' && env.GECKO_ID != '' }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.gate.outputs.ok == 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          name: dist
+          path: dist
+      - name: Submit new version to AMO (listed)
+        if: steps.gate.outputs.ok == 'true'
+        run: >
+          npx web-ext sign
+          --source-dir dist/firefox
+          --artifacts-dir web-ext-artifacts
+          --channel listed
+          --approval-timeout 0
+          --upload-source-code dist/hiraku-codeforces-source.zip
+      - name: Skipped (no secrets)
+        if: steps.gate.outputs.ok != 'true'
+        run: |
+          echo "::notice::Firefox AMO ignorada (faltam AMO_JWT_ISSUER, AMO_JWT_SECRET ou a variavel GECKO_ID). Veja docs/PUBLISHING.md"

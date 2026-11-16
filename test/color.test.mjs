@@ -86,3 +86,62 @@ test('classifyIcon: ícone colorido transparente → none; vazio → none', () =
   assert.equal(C.classifyIcon(icon(16, 16, () => T), 16, 16), 'none');
   assert.equal(C.classifyIcon(new Uint8ClampedArray(0), 0, 0), 'none');
 });
+
+/* ---------- recolorBrand (logo e selos no tema escuro) ---------- */
+
+const img = (w, h, fill) => {
+  const d = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) d.set(fill(x, y), (y * w + x) * 4);
+  return d;
+};
+const px = (d, w, x, y) => Array.from(d.slice((y * w + x) * 4, (y * w + x) * 4 + 4));
+const WHITE = [255, 255, 255, 255];
+const BLUE = [40, 140, 220, 255];
+
+test('recolorBrand (badge): fundo branco some, mas o branco cercado por cor fica', () => {
+  const w = 7;
+  const d = img(w, w, (x, y) => {
+    const dx = x - 3, dy = y - 3;
+    if (dx === 0 && dy === 0) return WHITE; // "aviãozinho" no meio
+    return dx * dx + dy * dy <= 6 ? BLUE : WHITE; // círculo azul sobre fundo branco
+  });
+  C.recolorBrand(d, w, w, 'badge');
+  assert.equal(px(d, w, 0, 0)[3], 0, 'canto transparente');
+  assert.equal(px(d, w, 6, 3)[3], 0, 'borda transparente');
+  assert.deepEqual(px(d, w, 3, 2), BLUE, 'círculo intacto');
+  assert.deepEqual(px(d, w, 3, 3), WHITE, 'branco interno preservado');
+});
+
+test('recolorBrand (logo): texto preto/azul-marinho clareia, barras coloridas ficam iguais', () => {
+  const w = 4;
+  const YELLOW = [255, 190, 0, 255];
+  const RED = [214, 35, 46, 255];
+  const NAVY = [20, 40, 110, 255];
+  const cols = [[0, 0, 0, 255], NAVY, YELLOW, RED];
+  const d = img(w, 1, (x) => cols[x]);
+  C.recolorBrand(d, w, 1, 'logo');
+  const black = px(d, w, 0, 0);
+  assert.ok(black[0] > 200 && black[1] > 200 && black[2] > 200 && black[3] === 255, 'preto virou claro');
+  const navy = px(d, w, 1, 0);
+  assert.ok(C.luminance({ r: navy[0], g: navy[1], b: navy[2] }) > 0.3, 'marinho clareou');
+  assert.ok(navy[2] > navy[0] && navy[2] > navy[1], 'continua azulado');
+  assert.deepEqual(px(d, w, 2, 0), YELLOW, 'amarelo intacto');
+  assert.deepEqual(px(d, w, 3, 0), RED, 'vermelho intacto');
+});
+
+test('recolorBrand (logo): texto escuro com alfa parcial mantém o alfa', () => {
+  const d = img(3, 1, () => [10, 10, 10, 120]);
+  C.recolorBrand(d, 3, 1, 'logo');
+  assert.equal(px(d, 3, 1, 0)[3], 120, 'alfa parcial é mantido (borda suave do texto)');
+  assert.ok(px(d, 3, 1, 0)[0] > 200, 'e a tinta ficou clara');
+  const e = img(3, 3, (x, y) => (x === 1 && y === 1 ? [10, 10, 10, 200] : [0, 0, 0, 0]));
+  C.recolorBrand(e, 3, 3, 'logo');
+  const p = px(e, 3, 1, 1);
+  assert.equal(p[3], 200);
+  assert.ok(p[0] > 200, 'tinta clara');
+});
+
+test('recolorBrand: tamanho inválido não quebra', () => {
+  const d = new Uint8ClampedArray(4);
+  assert.equal(C.recolorBrand(d, 0, 0, 'logo'), d);
+});
