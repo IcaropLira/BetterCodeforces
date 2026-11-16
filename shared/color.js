@@ -177,5 +177,101 @@
     return 'none';
   }
 
-  return { parseColor, luminance, contrast, chroma, rgbToHsl, hslToRgb, mix, css, fixBackground, fixText, classifyIcon };
+  const smooth = (a, b, x) => {
+    const t = clamp((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+
+  /**
+   * Adapta ao tema escuro uma imagem "de marca" (logo do site, selo do patrocinador),
+   * alterando os pixels RGBA em `data` (Uint8ClampedArray de w×h).
+   *
+   *  1. Fundo: pixels claros e neutros ligados à borda (flood fill) ficam transparentes.
+   *     O que está cercado por cor (o aviãozinho branco do Telegram) é preservado.
+   *  2. Franja: pixels de borda misturados com o branco do fundo perdem opacidade,
+   *     para não sobrar um "halo" claro em volta do desenho.
+   *  3. mode 'logo': tinta escura (texto preto, azul-marinho…) tem a luminosidade
+   *     invertida mantendo a matiz; cores vivas (as barras amarela/azul/vermelha) ficam intactas.
+   *     mode 'badge': só o fundo é removido.
+   *
+   * `ink` = cor do texto quando a tinta é cinza/preta (padrão: texto do tema escuro).
+   */
+  function recolorBrand(data, w, h, mode, ink) {
+    if (!w || !h || data.length < w * h * 4) return data;
+    const target = ink || { r: 230, g: 234, b: 243 };
+    const n = w * h;
+    const backdrop = (i) => {
+      const a = data[i * 4 + 3];
+      if (a < 16) return true;
+      const px = { r: data[i * 4], g: data[i * 4 + 1], b: data[i * 4 + 2] };
+      return a >= 200 && chroma(px) < 24 && luminance(px) >= 0.62;
+    };
+
+    // 1) flood fill a partir da borda
+    const bg = new Uint8Array(n);
+    const stack = [];
+    const seed = (x, y) => {
+      const i = y * w + x;
+      if (!bg[i] && backdrop(i)) {
+        bg[i] = 1;
+        stack.push(i);
+      }
+    };
+    for (let x = 0; x < w; x++) { seed(x, 0); seed(x, h - 1); }
+    for (let y = 0; y < h; y++) { seed(0, y); seed(w - 1, y); }
+    while (stack.length) {
+      const i = stack.pop();
+      const x = i % w;
+      const y = (i - x) / w;
+      if (x > 0) seed(x - 1, y);
+      if (x < w - 1) seed(x + 1, y);
+      if (y > 0) seed(x, y - 1);
+      if (y < h - 1) seed(x, y + 1);
+    }
+
+    const touchesBg = (x, y) => {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx;
+          const yy = y + dy;
+          if ((dx || dy) && xx >= 0 && yy >= 0 && xx < w && yy < h && bg[yy * w + xx]) return true;
+        }
+      }
+      return false;
+    };
+
+    // decide tudo antes de escrever (a franja olha o fundo original)
+    const fringe = new Uint8Array(n);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) if (!bg[y * w + x] && touchesBg(x, y)) fringe[y * w + x] = 1;
+    }
+
+    for (let i = 0; i < n; i++) {
+      const p = i * 4;
+      if (bg[i]) {
+        data[p + 3] = 0;
+        continue;
+      }
+      let a = data[p + 3];
+      if (!a) continue;
+      if (fringe[i]) {
+        const whiteness = Math.min(data[p], data[p + 1], data[p + 2]) / 255;
+        if (whiteness > 0.5) a *= clamp(1 - (whiteness - 0.5) * 2, 0, 1);
+      }
+      if (mode === 'logo') {
+        const { h: hue, s, l } = rgbToHsl({ r: data[p], g: data[p + 1], b: data[p + 2] });
+        const k = 1 - smooth(0.3, 0.42, l); // 1 = tinta escura, 0 = cor viva/clara
+        if (k > 0) {
+          const out = s < 0.12 ? target : hslToRgb(hue, s, Math.min(0.9, 1 - l));
+          data[p] = Math.round(data[p] * (1 - k) + out.r * k);
+          data[p + 1] = Math.round(data[p + 1] * (1 - k) + out.g * k);
+          data[p + 2] = Math.round(data[p + 2] * (1 - k) + out.b * k);
+        }
+      }
+      data[p + 3] = Math.round(a);
+    }
+    return data;
+  }
+
+  return { parseColor, luminance, contrast, chroma, rgbToHsl, hslToRgb, mix, css, fixBackground, fixText, classifyIcon, recolorBrand };
 });

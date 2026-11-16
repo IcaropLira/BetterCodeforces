@@ -46,7 +46,7 @@ const server = https
       res.writeHead(200, { 'content-type': 'image/png' });
       return res.end(readFileSync(icon));
     }
-    const file = /^\/(problemset|contest)\//.test(pathname) ? 'problem.html' : 'page.html';
+    const file = pathname === '/mock/contest' ? 'contest.html' : /^\/(problemset|contest)\//.test(pathname) ? 'problem.html' : 'page.html';
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     res.end(readFileSync(join(here, 'fixtures', file)));
   })
@@ -122,6 +122,46 @@ async function run(variant, scheme) {
   }
 }
 
+// Página que imita o print do usuário: linhas resolvidas, header colado nas bordas e selo do Telegram.
+const contestAudit = () => {
+  const bg = (id) => Array.from(document.getElementById(id).children).map((td) => getComputedStyle(td).backgroundColor);
+  const rect = (id) => document.getElementById(id).getBoundingClientRect();
+  const hdr = document.getElementById('header').getBoundingClientRect();
+  const pixels = (id, pts) => {
+    const img = document.getElementById(id);
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    return pts.map(([x, y]) => Array.from(ctx.getImageData(x, y, 1, 1).data));
+  };
+  return {
+    rows: Object.fromEntries(['rA', 'rB', 'rC', 'rD', 'rE', 'rF', 'rG'].map((r) => [r, bg(r)])),
+    firstShadow: ['rA', 'rB', 'rC', 'rD', 'rE'].map((r) => getComputedStyle(document.getElementById(r).firstElementChild).boxShadow),
+    logo: { src: document.getElementById('logo').src.slice(0, 22), ready: document.getElementById('logo').dataset.cfmReady ?? null,
+            left: rect('logo').left - hdr.left },
+    userRight: hdr.right - rect('user').right,
+    flagsRight: hdr.right - rect('flags').right,
+    flagsTop: rect('flags').top - hdr.top,
+    tg: { src: document.getElementById('tg').src.slice(0, 22), ready: document.getElementById('tg').dataset.cfmReady ?? null },
+    logoPx: document.getElementById('logo').dataset.cfmReady === 'ok' ? pixels('logo', [[2, 2], [25, 40], [100, 34], [200, 34]]) : null,
+    tgPx: document.getElementById('tg').dataset.cfmReady === 'ok' ? pixels('tg', [[1, 1], [30, 8], [30, 31]]) : null,
+  };
+};
+
+async function contest(scheme) {
+  const ctx = await launch('full', scheme);
+  try {
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    await page.goto('https://codeforces.com/mock/contest');
+    await page.waitForTimeout(3500);
+    if (process.env.E2E_SHOTS) await page.screenshot({ path: join(root, `e2e-contest-${scheme}.png`), fullPage: true });
+    return await page.evaluate(contestAudit);
+  } finally {
+    await ctx.close();
+  }
+}
+
 // Tradução de ponta a ponta: clique no botão → content script → background → "Google" falso → DOM.
 async function translation() {
   const ctx = await launch('full', 'dark');
@@ -175,6 +215,57 @@ try {
   check('tema claro: nada é marcado nem alterado', () => {
     assert.equal(light.theme, 'light');
     assert.deepEqual(Object.values(light.icons), [null, null, null, null]);
+  });
+
+  const cd = await contest('dark');
+  const cl = await contest('light');
+  const sameRow = (r) => new Set(r).size === 1;
+  check('linhas resolvidas (A–D): TODAS com o mesmo destaque verde, inclusive as pares', () => {
+    for (const r of ['rA', 'rB', 'rC', 'rD']) assert.ok(sameRow(cd.rows[r]), `${r} tem células diferentes: ${cd.rows[r]}`);
+    const [a, b, c, d] = ['rA', 'rB', 'rC', 'rD'].map((r) => cd.rows[r][0]);
+    assert.ok(a === b && b === c && c === d, `cores diferentes: ${[a, b, c, d]}`);
+    const [r, g, bl] = a.match(/[\d.]+/g).map(Number);
+    assert.ok(g > r && g > bl, `não é esverdeado: ${a}`);
+  });
+  check('linhas não resolvidas não ficam verdes', () => {
+    for (const r of ['rE', 'rF', 'rG']) assert.notEqual(cd.rows[r][0], cd.rows.rA[0]);
+  });
+  check('linhas resolvidas ganham a barra lateral; as outras não', () => {
+    assert.ok(cd.firstShadow.slice(0, 4).every((s) => s !== 'none'), cd.firstShadow.join(' | '));
+    assert.equal(cd.firstShadow[4], 'none');
+  });
+  check('tema claro: resolvidas também uniformes', () => {
+    const [a, b, c, d] = ['rA', 'rB', 'rC', 'rD'].map((r) => cl.rows[r][0]);
+    assert.ok(a === b && b === c && c === d, `cores diferentes: ${[a, b, c, d]}`);
+  });
+  check('logo: imagem tratada (sem filtro): fundo transparente, barra amarela intacta, texto claro', () => {
+    assert.equal(cd.logo.ready, 'ok');
+    assert.match(cd.logo.src, /^data:image\/png/);
+    const [bgPx, yellow, black, navy] = cd.logoPx;
+    assert.equal(bgPx[3], 0, 'fundo transparente');
+    assert.deepEqual(yellow, [255, 190, 0, 255]);
+    assert.ok(black[0] > 200 && black[3] === 255, `texto preto não clareou: ${black}`);
+    assert.ok(navy[2] > navy[0] && navy[0] + navy[1] + navy[2] > 250, `marinho: ${navy}`);
+  });
+  check('selo do Telegram: sem fundo branco, círculo e aviãozinho preservados', () => {
+    assert.equal(cd.tg.ready, 'ok');
+    const [corner, ring, plane] = cd.tgPx;
+    assert.equal(corner[3], 0, 'canto transparente');
+    assert.deepEqual(ring, [41, 169, 224, 255]);
+    assert.deepEqual(plane, [255, 255, 255, 255]);
+  });
+  check('tema claro: logo e selo originais', () => {
+    assert.equal(cl.logo.ready, null);
+    assert.match(cl.logo.src, /^https:\/\/codeforces/);
+    assert.equal(cl.tg.ready, null);
+  });
+  check('header: logo, bandeiras e usuário ganham respiro nas bordas', () => {
+    for (const c of [cd, cl]) {
+      assert.ok(c.logo.left >= 12, `logo encostada (${c.logo.left}px)`);
+      assert.ok(c.userRight >= 12, `usuário encostado (${c.userRight}px)`);
+      assert.ok(c.flagsRight >= 12, `bandeiras encostadas (${c.flagsRight}px)`);
+      assert.ok(c.flagsTop >= 6, `bandeiras coladas no topo (${c.flagsTop}px)`);
+    }
   });
 
   const t = await translation();

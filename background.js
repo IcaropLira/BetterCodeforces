@@ -171,9 +171,60 @@ async function handleIcon(url) {
   return { mode };
 }
 
+/* ------------------- logo e selos no tema escuro -------------------- */
+
+const brandCache = new Map(); // "modo|url" -> data URL (vale enquanto o background estiver vivo)
+
+function toBase64(buf) {
+  const u8 = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+/**
+ * Baixa o logo/selo (só https em domínios do Codeforces), tira o fundo branco e
+ * clareia a tinta escura sem mexer nas cores vivas. Devolve um data URL PNG.
+ */
+async function handleBrand(url, mode) {
+  let u;
+  try { u = new URL(url); } catch (e) { return { ok: false }; }
+  if (u.protocol !== 'https:' || !ICON_HOST.test(u.hostname)) return { ok: false };
+  mode = mode === 'logo' ? 'logo' : 'badge';
+
+  const key = `${mode}|${url}`;
+  if (brandCache.has(key)) return { ok: true, dataUrl: brandCache.get(key) };
+
+  try {
+    const res = await fetch(url, { credentials: 'omit' });
+    const blob = res.ok ? await res.blob() : null;
+    if (!blob || blob.size > 2_000_000 || !/^image\//.test(blob.type)) return { ok: false };
+    const bmp = await createImageBitmap(blob);
+    const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const canvas = new OffscreenCanvas(w, h);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(bmp, 0, 0, w, h);
+    const frame = ctx.getImageData(0, 0, w, h);
+    globalThis.CFM_COLOR.recolorBrand(frame.data, w, h, mode);
+    ctx.putImageData(frame, 0, 0);
+    const out = await canvas.convertToBlob({ type: 'image/png' });
+    const dataUrl = 'data:image/png;base64,' + toBase64(await out.arrayBuffer());
+    brandCache.set(key, dataUrl);
+    return { ok: true, dataUrl };
+  } catch (e) {
+    return { ok: false }; // formato que o navegador não decodifica, rede etc.
+  }
+}
+
 /* ----------------------------- mensagens ---------------------------- */
 
 ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.type === 'cfm-brand') {
+    handleBrand(String(msg.url || ''), msg.mode).then(sendResponse, () => sendResponse({ ok: false }));
+    return true;
+  }
   if (msg && msg.type === 'translate') {
     handleTranslate(msg).then(sendResponse, (e) =>
       sendResponse({ ok: false, error: e.message || String(e), fatal: !!e.fatal })
