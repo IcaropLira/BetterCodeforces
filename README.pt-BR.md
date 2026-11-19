@@ -2,7 +2,7 @@
 
 <img src="brand/hiraku-codeforces.svg" width="96" alt="">
 
-[![CI](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml)
+[![CI](https://github.com/IcaropLira/BetterCodeforces/actions/workflows/ci.yml/badge.svg)](https://github.com/IcaropLira/BetterCodeforces/actions/workflows/ci.yml)
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 
 Extensão para **Chrome e Firefox** que dá ao [Codeforces](https://codeforces.com) um visual moderno e traduz enunciados **sem quebrar as fórmulas TeX**.
@@ -34,8 +34,8 @@ Extensão para **Chrome e Firefox** que dá ao [Codeforces](https://codeforces.c
 
 | Navegador | Como |
 |---|---|
-| Chrome / Edge / Brave | Link da loja — _em breve_. Ou pelo zip: baixe `hiraku-codeforces-<versão>-chrome.zip` em [Releases](../../releases), descompacte, abra `chrome://extensions`, ative o *Modo do desenvolvedor* → *Carregar sem compactação*. |
-| Firefox | Link da AMO — _em breve_. Ou `about:debugging#/runtime/this-firefox` → *Carregar extensão temporária* → escolha o zip do Firefox (temporária até reiniciar). |
+| Chrome / Edge / Brave | **[Chrome Web Store](https://chromewebstore.google.com/detail/hiraku-codeforces/kbjfgloamahakmngfecokkmffeakjnpk)**. Ou pelo zip: baixe `hiraku-codeforces-<versão>-chrome.zip` em [Releases](../../releases), descompacte, abra `chrome://extensions`, ative o *Modo do desenvolvedor* → *Carregar sem compactação*. |
+| Firefox | **[Firefox Add-ons](https://addons.mozilla.org/firefox/addon/hiraku-for-codeforces/)**. Ou `about:debugging#/runtime/this-firefox` → *Carregar extensão temporária* → escolha o zip do Firefox (temporária até reiniciar). |
 
 Requer Chrome 120+ / Firefox 140+.
 

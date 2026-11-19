@@ -2,7 +2,7 @@
 
 <img src="brand/hiraku-codeforces.svg" width="96" alt="">
 
-[![CI](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml)
+[![CI](https://github.com/IcaropLira/BetterCodeforces/actions/workflows/ci.yml/badge.svg)](https://github.com/IcaropLira/BetterCodeforces/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A **Chrome and Firefox** extension that gives [Codeforces](https://codeforces.com) a modern look and translates problem statements **without breaking the TeX formulas**.
@@ -34,8 +34,8 @@ A **Chrome and Firefox** extension that gives [Codeforces](https://codeforces.co
 
 | Browser | How |
 |---|---|
-| Chrome / Edge / Brave | Web Store link — _coming soon_. Or load the zip: download `hiraku-codeforces-<version>-chrome.zip` from [Releases](../../releases), unzip, open `chrome://extensions`, enable *Developer mode* → *Load unpacked*. |
-| Firefox | AMO link — _coming soon_. Or `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on* → pick the Firefox zip (temporary until restart). |
+| Chrome / Edge / Brave | **[Chrome Web Store](https://chromewebstore.google.com/detail/hiraku-codeforces/kbjfgloamahakmngfecokkmffeakjnpk)**. Or load the zip: download `hiraku-codeforces-<version>-chrome.zip` from [Releases](../../releases), unzip, open `chrome://extensions`, enable *Developer mode* → *Load unpacked*. |
+| Firefox | **[Firefox Add-ons](https://addons.mozilla.org/firefox/addon/hiraku-for-codeforces/)**. Or `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on* → pick the Firefox zip (temporary until restart). |
 
 Requires Chrome 120+ / Firefox 140+.
 

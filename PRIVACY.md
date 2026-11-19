@@ -38,6 +38,6 @@ The extension is not directed to children and collects no personal data from any
 If this policy changes, the new version will be published in this repository with an updated date, and the extension's listing will be updated accordingly.
 
 ## Contact
-Open an issue at <https://github.com/YOUR_USER/hiraku-codeforces/issues>.
+Open an issue at <https://github.com/IcaropLira/BetterCodeforces/issues>.
 
 _Hiraku Codeforces is an independent, unofficial project. It is not affiliated with, endorsed by or sponsored by Codeforces, Google or DeepL._
