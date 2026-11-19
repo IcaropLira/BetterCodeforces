@@ -5,7 +5,8 @@
 //
 // Uso:  CHROMIUM_PATH=/caminho/do/chrome node scripts/make-store-assets.mjs
 //       (sem CHROMIUM_PATH usa o Chromium do Playwright: npx playwright-core install chromium)
-// As capturas dentro do próprio Codeforces você tira à mão (ver docs/PUBLISHING.md).
+// As capturas dentro do próprio Codeforces ficam em store/raw/ (tiradas à mão, ver
+// docs/PUBLISHING.md); aqui elas ganham moldura e legenda em inglês e português.
 import { readFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -101,4 +102,53 @@ await render(tile(1400, 560, { t: 96, s: 22, l: 270, f: 15 }, 'Modern look, coll
 const dark = await popupShot(browser, 'dark', 'dark', '#ee3d8b');
 const light = await popupShot(browser, 'light', 'light', '#a77bdb');
 await render(screenshotPage(dark, light), 1280, 800, 'screenshots/01-popup-1280x800.png');
+
+/* --------- capturas de recursos (store/raw → 1280×800, en e pt-BR) --------- */
+
+const FEATURES = [
+  { raw: 'translate-dark.png', crop: 0, en: ['Translate statements', 'without breaking the math.'], pt: ['Traduza enunciados', 'sem quebrar as fórmulas.'],
+    ten: 'One click (or Alt+Shift+T). Formulas, code and samples stay untouched.', tpt: 'Um clique (ou Alt+Shift+T). Fórmulas, código e exemplos ficam intactos.' },
+  { raw: 'standings-dark.png', crop: 0, en: ['College standings', 'for your institution.'], pt: ['College standings', 'da sua instituição.'],
+    ten: 'Everyone from your Codeforces organization, with their rank inside it and overall.', tpt: 'Todo mundo da sua organização, com a posição dentro dela e a geral.' },
+  { raw: 'samples-dark.png', crop: 0, en: ['A dark theme', 'that reads well.'], pt: ['Um tema escuro', 'que dá para ler.'],
+    ten: 'A contrast engine fixes what CSS alone misses — logo, icons, highlighted tests.', tpt: 'Um motor de contraste corrige o que o CSS não pega — logo, ícones, testes destacados.' },
+  { raw: 'problemset-light.png', crop: 0, en: ['No spoilers.', 'Your colours.'], pt: ['Sem spoiler.', 'Do seu jeito.'],
+    ten: 'Blur tags and difficulty until you hover. Light, dark or automatic, any accent.', tpt: 'Tags e dificuldade borradas até passar o mouse. Claro, escuro ou automático.' },
+];
+
+function featurePage(f, lang) {
+  const [a, b] = f[lang];
+  const sub = lang === 'en' ? f.ten : f.tpt;
+  const img = `data:image/png;base64,${readFileSync(join(out, 'raw', f.raw)).toString('base64')}`;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+:root { --w: 1280px; --h: 800px; --t: 46px; --s: 16px; --logo: 0px; --f: 12px; } ${FONTS}
+.cap { position: absolute; left: 80px; top: 44px; right: 80px; display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
+.cap h1 { font-size: 46px; line-height: 1.05; } .cap h1 em { display: inline; padding: 0; }
+.cap .k { margin: 0; max-width: 40ch; text-align: right; }
+.mk { position: absolute; right: 80px; top: 30px; width: 44px; height: 44px; }
+.shot { position: absolute; left: 80px; right: 80px; top: 180px; bottom: 0; border-radius: 18px 18px 0 0; overflow: hidden;
+  box-shadow: 0 30px 80px #000000a0, 0 0 0 1px #3a2b5c; background: #0d0817; }
+.shot img { display: block; width: 100%; margin-top: -${f.crop}px; }
+</style></head><body>${SG}<div class="glow"></div>
+<div class="cap"><h1>${a}<br><em>${b}</em></h1><p class="k">${sub}</p></div>
+<div class="shot"><img src="${img}"></div></body></html>`;
+}
+
+for (const [i, f] of FEATURES.entries()) {
+  for (const lang of ['en', 'pt']) {
+    const name = `screenshots/${String(i + 2).padStart(2, '0')}-${f.raw.replace('.png', '')}${lang === 'pt' ? '.pt-BR' : ''}-1280x800.png`;
+    await render(featurePage(f, lang), 1280, 800, name);
+  }
+}
+
+/* --------- ícone da Chrome Web Store: 128×128 com a arte em 96×96 --------- */
+{
+  const page = await browser.newPage({ viewport: { width: 128, height: 128 } });
+  await page.setContent(`<html><body style="margin:0;background:transparent"><div style="width:128px;height:128px;display:grid;place-items:center">
+  <div style="width:96px;height:96px">${logo.replace('<svg ', '<svg style="width:96px;height:96px;display:block" ')}</div></div></body></html>`);
+  await page.screenshot({ path: join(out, 'store-icon-128.png'), omitBackground: true });
+  await page.close();
+  console.log('✔ store-icon-128.png');
+}
+
 await browser.close();
