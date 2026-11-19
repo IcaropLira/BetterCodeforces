@@ -9,10 +9,10 @@
 <body>
   <main>
     <header class="top">
-      <div class="logo" aria-hidden="true">H</div>
+      <img class="logo" src="../icons/logo.svg" alt="" width="40" height="40">
       <div class="titles">
         <h1>Hiraku Codeforces</h1>
-        <p data-i18n="tagline">Codeforces, redesigned</p>
+        <p class="tag" data-i18n="tagline">Codeforces, redesigned</p>
       </div>
       <label class="switch" data-i18n-title="toggleTitle" title="Turn the new look on/off">
         <input id="enabled" type="checkbox">
@@ -93,6 +93,28 @@
         <button type="button" id="test" class="ghost" data-i18n="test">Test service</button>
       </div>
       <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section>
+      <h2 data-i18n="qol">Codeforces</h2>
+      <label class="row check">
+        <span class="label" data-i18n="hideTags">Hide tags and difficulty (hover to reveal)</span>
+        <input id="hideTags" type="checkbox">
+      </label>
+      <label class="row check">
+        <span class="label" data-i18n="hideSolved">Hide solved problems in the problem list</span>
+        <input id="hideSolved" type="checkbox">
+      </label>
+
+      <h3 data-i18n="college">College standings</h3>
+      <div class="row col">
+        <span class="label" data-i18n="orgId">Organization (ID or link; empty = from your profile)</span>
+        <input id="orgId" type="text" placeholder="https://codeforces.com/ratings/organization/…" autocomplete="off" spellcheck="false">
+      </div>
+      <label class="row check">
+        <span class="label" data-i18n="collegeDefault">Open standings already filtered by it</span>
+        <input id="collegeDefault" type="checkbox">
+      </label>
     </section>
 
     <footer>

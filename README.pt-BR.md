@@ -1,5 +1,7 @@
 # Hiraku Codeforces
 
+<img src="brand/hiraku-codeforces.svg" width="96" alt="">
+
 [![CI](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml)
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 
@@ -22,6 +24,11 @@ Extensão para **Chrome e Firefox** que dá ao [Codeforces](https://codeforces.c
 - Fórmulas, código e exemplos viram marcadores antes de traduzir e voltam depois — os *mesmos nós do MathJax já renderizados* são devolvidos ao lugar, nunca reconstruídos a partir de texto.
 - A resposta é validada (todo marcador presente uma vez e bem aninhado). Se o serviço bagunçar, o trecho é refeito em modo "simples" (só frases) e, se ainda assim falhar, fica no original.
 - Google Tradutor (sem chave) ou DeepL (sua própria chave de API); 17 idiomas de destino; cache local.
+
+**Qualidade de vida**
+- **College standings:** em qualquer standings, filtre por handle/equipe ou troque para *Minha instituição* — todo mundo da sua organização do Codeforces, com a posição dentro dela e a geral (contests normais); em gyms/grupos filtra a página aberta.
+- **Anti-spoiler:** tags e dificuldade borradas até passar o mouse.
+- **Esconder problemas resolvidos** na lista de problemas.
 
 ## Instalação
 

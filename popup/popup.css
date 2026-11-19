@@ -1,20 +1,26 @@
+@font-face { font-family: "Playfair Display"; font-weight: 700; src: url("fonts/playfair-display-700.woff2") format("woff2"); }
+@font-face { font-family: "Fira Code"; font-weight: 500; src: url("fonts/fira-code-500.woff2") format("woff2"); }
+
 :root {
   color-scheme: light dark;
   --bg: #ffffff;
-  --surface: #f3f5fa;
-  --border: #dfe5f0;
-  --text: #1c2333;
-  --muted: #667089;
-  --accent: #5b7cfa;
+  --surface: #f4f0f9;
+  --border: #e5ddef;
+  --text: #1d1530;
+  --muted: #6c6185;
+  --accent: #ee3d8b;
   --on-accent: #ffffff;
+  --pk2: #c2306f;
+  --grad: linear-gradient(135deg, #ee0f7f, #ff8db8 45%, #6b3fa0);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #131822;
-    --surface: #1b2230;
-    --border: #2a3347;
-    --text: #e6eaf3;
-    --muted: #94a0b8;
+    --bg: #0d0817;
+    --surface: #1a1230;
+    --border: #2d2148;
+    --text: #ece6f7;
+    --muted: #9d90b8;
+    --pk2: #ff8db8;
   }
 }
 
@@ -37,28 +43,29 @@ main { padding: 14px 16px 12px; }
   margin-bottom: 6px;
 }
 .logo {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #9b5cff));
-  color: var(--on-accent);
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: -0.02em;
+  box-shadow: 0 4px 14px rgba(238, 15, 127, 0.22);
 }
 .titles { flex: 1; }
-h1 { margin: 0; font-size: 15px; letter-spacing: -0.01em; }
-.titles p { margin: 0; color: var(--muted); font-size: 12px; }
+h1 { margin: 0; font: 700 17px/1.15 "Playfair Display", Georgia, serif; letter-spacing: 0; }
+.titles .tag { margin: 2px 0 0; color: var(--pk2); font: 500 11px "Fira Code", ui-monospace, monospace; }
+
+body {
+  background-image: radial-gradient(260px 120px at 0% 0%, rgba(238, 15, 127, 0.12), transparent),
+    radial-gradient(260px 140px at 100% 0%, rgba(107, 63, 160, 0.16), transparent);
+  background-repeat: no-repeat;
+}
+h3 { margin: 12px 0 2px; font-size: 12px; color: var(--text); }
 
 h2 {
   margin: 16px 0 8px;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+  font: 500 11px "Fira Code", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  color: var(--pk2);
 }
+h2::before { content: "// "; opacity: .6; }
 
 section { border-top: 1px solid var(--border); margin-top: 10px; }
 
@@ -74,7 +81,7 @@ section { border-top: 1px solid var(--border); margin-top: 10px; }
 .label { color: var(--text); }
 .label b { color: var(--muted); font-weight: 600; margin-left: 4px; }
 
-select, input[type="password"] {
+select, input[type="password"], input[type="text"] {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
@@ -83,8 +90,8 @@ select, input[type="password"] {
   font: inherit;
   max-width: 190px;
 }
-input[type="password"] { max-width: none; width: 100%; }
-select:focus, input[type="password"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+input[type="password"], input[type="text"] { max-width: none; width: 100%; }
+select:focus, input[type="password"]:focus, input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 small { color: var(--muted); font-size: 11px; }
 code { background: var(--surface); padding: 0 4px; border-radius: 4px; }
@@ -164,7 +171,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   font-weight: 600;
   cursor: pointer;
 }
-.actions .primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.actions .primary { background: var(--grad); color: var(--on-accent); border-color: transparent; }
 .actions .primary:disabled { opacity: .5; cursor: default; }
 .actions .ghost { background: var(--surface); color: var(--text); }
 .actions button:hover:not(:disabled) { filter: brightness(1.07); }

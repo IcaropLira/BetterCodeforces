@@ -1,6 +1,6 @@
 # Política de Privacidade — Hiraku Codeforces
 
-_Última atualização: 2026-10-17 · English: [PRIVACY.md](PRIVACY.md)_
+_Última atualização: 2026-11-18 · English: [PRIVACY.md](PRIVACY.md)_
 
 O Hiraku Codeforces é uma extensão de navegador que muda o visual do Codeforces e pode traduzir enunciados de problemas. Esta política explica o que ela faz com os seus dados. Resumindo: **o desenvolvedor não coleta nada.** Não há servidor, conta, análise de uso nem rastreamento.
 
@@ -18,6 +18,8 @@ Você pode apagar tudo isso a qualquer momento desinstalando a extensão ou limp
 
   Fórmulas matemáticas, código e entradas/saídas de exemplo são trocados por marcadores antes do envio e **não** são transmitidos. Esses serviços tratam o texto conforme as próprias políticas: [Google](https://policies.google.com/privacy), [DeepL](https://www.deepl.com/privacy). O desenvolvedor da extensão nunca recebe esse texto.
 - **Ícones.** Para corrigir ícones pequenos com fundo branco no tema escuro, a extensão baixa ícones **somente de domínios do Codeforces** (`codeforces.com`, `codeforces.org`, `codeforc.es`) e analisa os pixels localmente. Nada disso é enviado a outro lugar.
+
+- **College standings,** só quando você aperta *Minha instituição* num standings: a extensão lê, **do próprio Codeforces**, o seu perfil público (para achar a organização), a lista pública de rating da organização e a classificação pública do contest (`codeforces.com/api/contest.standings`, chamada anônima). A lista de membros fica guardada localmente por 3 dias. Nada é enviado para outro lugar.
 
 Nenhuma outra requisição de rede é feita. A extensão não carrega nem executa código remoto.
 

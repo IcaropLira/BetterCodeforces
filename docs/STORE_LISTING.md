@@ -2,7 +2,7 @@
 
 Everything you need to fill in the Chrome Web Store and Firefox AMO forms. Replace `YOUR_USER` with your GitHub user.
 
-> **Name.** The extension is currently called **Hiraku Codeforces**. Both stores forbid implying that a product is made or endorsed by another organization, and "Codeforces" is someone else's brand. A safer name is **Hiraku for Codeforces** (same pattern Mozilla requires for "… for Firefox"). To rename, edit `extName` in `_locales/en/messages.json` and `_locales/pt_BR/messages.json`, then rerun `python3 scripts/make-store-assets.py "Hiraku" "for Codeforces"`. Keep the "unofficial / not affiliated" sentence in the description.
+> **Name.** The extension is currently called **Hiraku Codeforces**. Both stores forbid implying that a product is made or endorsed by another organization, and "Codeforces" is someone else's brand. A safer name is **Hiraku for Codeforces** (same pattern Mozilla requires for "… for Firefox"). To rename, edit `extName` in `_locales/en/messages.json` and `_locales/pt_BR/messages.json`, then change the title in `scripts/make-store-assets.mjs` and rerun `npm run assets`. Keep the "unofficial / not affiliated" sentence in the description.
 
 ## Short description (≤132 chars) — already in `_locales`
 > A modern look for Codeforces: light/dark themes and one-click problem translation that keeps LaTeX formulas intact.

@@ -45,8 +45,12 @@
     html.style.setProperty('--cfm-font', FONTS[s.font] || FONTS.system);
     html.style.setProperty('--cfm-statement-size', `${Number(s.fontSize) || 16}px`);
     T = I18N.make(s.uiLang);
+    // qualidade de vida: valem mesmo com o visual desligado
+    html.toggleAttribute('data-cfm-hide-tags', !!s.hideTags);
+    html.toggleAttribute('data-cfm-hide-solved', !!s.hideSolved);
     syncEngines();
     syncLayout();
+    if (globalThis.CFM_STANDINGS) globalThis.CFM_STANDINGS.update(s, T);
   }
 
   // Motor de contraste e tratamento de ícones: só no tema escuro.
@@ -586,7 +590,8 @@
     for (const l of LANGS) select.append(h('option', { value: l.code }, l.name));
     const status = h('span', { class: 'cfm-status' });
     const bar = h('div', { class: 'cfm-bar' });
-    const el = h('div', { class: 'cfm-toolbar', translate: 'no' }, btn, select, status, bar);
+    const mark = globalThis.CFM_MARK ? globalThis.CFM_MARK() : '';
+    const el = h('div', { class: 'cfm-toolbar', translate: 'no', title: '' }, mark, btn, select, status, bar);
     return { el, btn, btnLabel, select, status, bar };
   }
 

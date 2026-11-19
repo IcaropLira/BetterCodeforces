@@ -129,16 +129,34 @@ test('recolorBrand (logo): texto preto/azul-marinho clareia, barras coloridas fi
   assert.deepEqual(px(d, w, 3, 0), RED, 'vermelho intacto');
 });
 
-test('recolorBrand (logo): texto escuro com alfa parcial mantém o alfa', () => {
+test('recolorBrand (logo): texto escuro com alfa parcial continua translúcido e clareia', () => {
   const d = img(3, 1, () => [10, 10, 10, 120]);
   C.recolorBrand(d, 3, 1, 'logo');
-  assert.equal(px(d, 3, 1, 0)[3], 120, 'alfa parcial é mantido (borda suave do texto)');
-  assert.ok(px(d, 3, 1, 0)[0] > 200, 'e a tinta ficou clara');
+  const q = px(d, 3, 1, 0);
+  assert.ok(q[3] >= 110 && q[3] <= 120, 'alfa parcial é mantido (borda suave do texto)');
+  assert.ok(q[0] > 200, 'e a tinta ficou clara');
   const e = img(3, 3, (x, y) => (x === 1 && y === 1 ? [10, 10, 10, 200] : [0, 0, 0, 0]));
   C.recolorBrand(e, 3, 3, 'logo');
   const p = px(e, 3, 1, 1);
-  assert.equal(p[3], 200);
+  assert.ok(p[3] >= 185 && p[3] <= 200);
   assert.ok(p[0] > 200, 'tinta clara');
+});
+
+test('recolorBrand (logo): miolo branco das letras some e o cinza da borda vira alfa', () => {
+  // "O" preto com miolo branco, cercado de branco: o miolo não está ligado à borda
+  const w = 7;
+  const d = img(w, w, (x, y) => {
+    if (x === 3 && y === 3) return WHITE; // miolo
+    if (x >= 2 && x <= 4 && y >= 2 && y <= 4) return [0, 0, 0, 255]; // letra
+    if (x === 1 && y === 3) return [128, 128, 128, 255]; // antisserrilhado
+    return WHITE;
+  });
+  C.recolorBrand(d, w, w, 'logo');
+  assert.equal(px(d, w, 3, 3)[3], 0, 'miolo transparente');
+  const grey = px(d, w, 1, 3);
+  assert.ok(grey[3] > 100 && grey[3] < 140, 'cinza vira tinta meio transparente, não um contorno cinza opaco');
+  assert.ok(grey[0] > 200, 'na cor clara do texto');
+  assert.ok(px(d, w, 2, 2)[0] > 200 && px(d, w, 2, 2)[3] === 255, 'letra clara e opaca');
 });
 
 test('recolorBrand: tamanho inválido não quebra', () => {

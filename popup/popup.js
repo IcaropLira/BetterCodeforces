@@ -6,7 +6,7 @@
   const I18N = globalThis.CFM_I18N;
   const $ = (id) => document.getElementById(id);
 
-  const ACCENTS = ['#5b7cfa', '#8b5cf6', '#14b8a6', '#22c55e', '#f59e0b', '#ef4444', '#ec4899'];
+  const ACCENTS = ['#ee3d8b', '#a77bdb', '#5b7cfa', '#14b8a6', '#22c55e', '#f59e0b', '#ef4444'];
   let s = { ...D };
   let T = I18N.make(s.uiLang);
 
@@ -53,7 +53,7 @@
     }
     const custom = document.createElement('input');
     custom.type = 'color';
-    custom.value = /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent : '#5b7cfa';
+    custom.value = /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent : '#ee3d8b';
     custom.title = T('accentCustom');
     custom.addEventListener('input', () => save({ accent: custom.value }));
     custom.addEventListener('change', renderSwatches);
@@ -115,6 +115,13 @@
 
     $('autoTranslate').checked = s.autoTranslate;
     $('autoTranslate').addEventListener('change', (e) => save({ autoTranslate: e.target.checked }));
+
+    for (const id of ['hideTags', 'hideSolved', 'collegeDefault']) {
+      $(id).checked = !!s[id];
+      $(id).addEventListener('change', (e) => save({ [id]: e.target.checked }));
+    }
+    $('orgId').value = s.orgId;
+    $('orgId').addEventListener('change', (e) => save({ orgId: e.target.value.trim() }));
 
     $('uiLang').value = s.uiLang;
     $('uiLang').addEventListener('change', (e) => {

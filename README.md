@@ -1,5 +1,7 @@
 # Hiraku Codeforces
 
+<img src="brand/hiraku-codeforces.svg" width="96" alt="">
+
 [![CI](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/hiraku-codeforces/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -16,6 +18,11 @@ A **Chrome and Firefox** extension that gives [Codeforces](https://codeforces.co
 - Redesigned problem pages (readable statement, tidy sample tests with copy buttons), cards, tables, menus and forms.
 - **Contrast engine for dark mode:** Codeforces has hundreds of hand-colored elements (white boxes, black text, navy links, light icons). Besides the stylesheet, a small script inspects the *computed* colors and fixes whatever is still unreadable, keeping rating colors recognizable.
 - Interface in English and Portuguese.
+
+**Quality of life**
+- **College standings:** on any standings page, filter by handle/team or switch to *My institution* — every participant from your Codeforces organization with their position inside it and overall (regular contests); on gyms/groups it filters the open page.
+- **Anti-spoiler:** blur tags and difficulty until you hover.
+- **Hide solved problems** in the problem list.
 
 **Translation**
 - One click (or `Alt+Shift+T`) translates the statement; click again for the original.
@@ -60,6 +67,9 @@ content/theme.css      the whole look, driven by CSS variables
 content/contrast.js    dark-mode contrast engine
 content/icons.js       light/dark icon detection
 content/content.js     settings, DOM reading, translation, toolbar
+content/standings.js   standings search and college standings
+content/mark.js        the extension mark used in the injected bars
+brand/                 logo sources (SVG; the -small variant is for 16/32 px)
 shared/                defaults, i18n, color math, TeX protection
 popup/                 settings popup
 _locales/              store name/description (en, pt_BR)
