@@ -16,8 +16,11 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run lint
-      - name: End-to-end (Chrome real com a extensão carregada)
-        run: CHROMIUM_PATH="$(which google-chrome)" npm run test:e2e
+      # O Google Chrome de marca (137+) ignora --load-extension; o Chromium do Playwright aceita.
+      - name: Instalar Chromium (Playwright)
+        run: npx playwright-core install --with-deps chromium
+      - name: End-to-end (Chromium real com a extensão carregada)
+        run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         with:
           name: extension-builds
