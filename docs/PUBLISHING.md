@@ -4,7 +4,7 @@ Checklist and step-by-step. Texts to paste live in [STORE_LISTING.md](STORE_LIST
 
 ## 0. Before you start
 
-- [ ] Push the repo to GitHub and replace every `YOUR_USER` (README, PRIVACY, docs, `package.json`) with your user. The privacy policy URL must work, so the repo must be public (or host the policy elsewhere).
+- [x] Push the repo to GitHub and replace every `YOUR_USER` (README, PRIVACY, docs, `package.json`) with your user. The privacy policy URL must work, so the repo must be public (or host the policy elsewhere).
 - [ ] **Decide the name.** See the note at the top of [STORE_LISTING.md](STORE_LISTING.md): "Hiraku **for** Codeforces" is safer than "Hiraku Codeforces" because both stores reject products that imply endorsement by another organization.
 - [ ] Pick your **Firefox add-on ID** (an email-like string, unique, permanent): `GECKO_ID=hiraku-codeforces@yourname.dev npm run build`. You can't change it after the first upload.
 - [ ] **Real screenshots.** The files in `store/` are generated (promo tiles + the extension's own popup). Take 3–5 real screenshots **inside Codeforces** at **1280×800** (DevTools → device toolbar → 1280×800 → capture screenshot): a dark problem page, a translated statement with formulas, the profile or standings page, the light theme. Put them in `store/screenshots/`.

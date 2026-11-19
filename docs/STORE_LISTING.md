@@ -1,8 +1,8 @@
 # Store listing text (copy & paste)
 
-Everything you need to fill in the Chrome Web Store and Firefox AMO forms. Replace `YOUR_USER` with your GitHub user.
+Everything you need to fill in the Chrome Web Store and Firefox AMO forms. Links already point to IcaropLira/BetterCodeforces.
 
-> **Name.** The extension is currently called **Hiraku Codeforces**. Both stores forbid implying that a product is made or endorsed by another organization, and "Codeforces" is someone else's brand. A safer name is **Hiraku for Codeforces** (same pattern Mozilla requires for "… for Firefox"). To rename, edit `extName` in `_locales/en/messages.json` and `_locales/pt_BR/messages.json`, then rerun `python3 scripts/make-store-assets.py "Hiraku" "for Codeforces"`. Keep the "unofficial / not affiliated" sentence in the description.
+> **Name.** The extension is currently called **Hiraku Codeforces**. Both stores forbid implying that a product is made or endorsed by another organization, and "Codeforces" is someone else's brand. A safer name is **Hiraku for Codeforces** (same pattern Mozilla requires for "… for Firefox"). To rename, edit `extName` in `_locales/en/messages.json` and `_locales/pt_BR/messages.json`, then change the title in `scripts/make-store-assets.mjs` and rerun `npm run assets`. Keep the "unofficial / not affiliated" sentence in the description.
 
 ## Short description (≤132 chars) — already in `_locales`
 > A modern look for Codeforces: light/dark themes and one-click problem translation that keeps LaTeX formulas intact.
@@ -27,9 +27,9 @@ TRANSLATE WITHOUT BREAKING MATH
 PRIVACY
 • No account, no analytics, no tracking, no developer server
 • Statement text is sent to the translation service you choose only when you translate; formulas and samples are not sent
-• Full policy: https://github.com/YOUR_USER/hiraku-codeforces/blob/main/PRIVACY.md
+• Full policy: https://github.com/IcaropLira/BetterCodeforces/blob/main/PRIVACY.md
 
-Open source (MIT): https://github.com/YOUR_USER/hiraku-codeforces
+Open source (MIT): https://github.com/IcaropLira/BetterCodeforces
 
 Unofficial extension. Not affiliated with, endorsed by or sponsored by Codeforces, Google or DeepL.
 ```
@@ -54,9 +54,9 @@ TRADUZA SEM QUEBRAR A MATEMÁTICA
 PRIVACIDADE
 • Sem conta, sem análise de uso, sem rastreamento, sem servidor do desenvolvedor
 • O texto do enunciado só é enviado ao serviço de tradução escolhido quando você traduz; fórmulas e exemplos não são enviados
-• Política completa: https://github.com/YOUR_USER/hiraku-codeforces/blob/main/PRIVACY.pt-BR.md
+• Política completa: https://github.com/IcaropLira/BetterCodeforces/blob/main/PRIVACY.pt-BR.md
 
-Código aberto (MIT): https://github.com/YOUR_USER/hiraku-codeforces
+Código aberto (MIT): https://github.com/IcaropLira/BetterCodeforces
 
 Extensão não oficial. Sem afiliação, endosso ou patrocínio do Codeforces, Google ou DeepL.
 ```
@@ -85,7 +85,7 @@ Extensão não oficial. Sem afiliação, endosso ou patrocínio do Codeforces, G
 - ☐ everything else (personally identifiable info, health, financial, location, web history, user activity, personal communications).
 - Certify: data is not sold to third parties; not used or transferred for purposes unrelated to the single purpose; not used for creditworthiness or lending.
 
-**Privacy policy URL:** `https://github.com/YOUR_USER/hiraku-codeforces/blob/main/PRIVACY.md`
+**Privacy policy URL:** `https://github.com/IcaropLira/BetterCodeforces/blob/main/PRIVACY.md`
 
 ---
 

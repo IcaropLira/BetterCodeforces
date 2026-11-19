@@ -8,7 +8,7 @@
    ========================================================================== */
 
 :root {
-  --cfm-accent: #5b7cfa;
+  --cfm-accent: #ee3d8b; /* rosa Hiraku */
   --cfm-on-accent: #ffffff;
   --cfm-radius: 12px;
   --cfm-gutter: 18px; /* respiro lateral do cabeçalho (logo, bandeiras, usuário) */
@@ -21,15 +21,15 @@
 
 html:not([data-cfm="off"]) {
   color-scheme: light;
-  --bg: #f3f5fa;
+  --bg: #f6f3fa;
   --surface: #ffffff;
-  --surface-2: #eef1f8;
-  --border: #dfe5f0;
-  --text: #1c2333;
-  --muted: #667089;
+  --surface-2: #f1ecf7;
+  --border: #e5ddef;
+  --text: #1d1530;
+  --muted: #6c6185;
   --link: color-mix(in srgb, var(--cfm-accent) 82%, #000 18%);
-  --sample-bg: #f8f9fd;
-  --shadow: 0 1px 2px rgba(20, 30, 60, 0.05), 0 8px 24px rgba(20, 30, 60, 0.06);
+  --sample-bg: #faf8fd;
+  --shadow: 0 1px 2px rgba(40, 20, 70, 0.05), 0 8px 24px rgba(40, 20, 70, 0.07);
   --ok: #2ea043;
   --bad: #e5484d;
   --ok-bg: color-mix(in srgb, var(--ok) 13%, var(--surface));
@@ -39,29 +39,33 @@ html:not([data-cfm="off"]) {
 @media (prefers-color-scheme: dark) {
   html:not([data-cfm="off"]):not([data-cfm-theme]) {
     color-scheme: dark;
-    --bg: #0e121a;
-    --surface: #161b27;
-    --surface-2: #1d2434;
-    --border: #2a3347;
-    --text: #e6eaf3;
-    --muted: #94a0b8;
-    --link: color-mix(in srgb, var(--cfm-accent) 70%, #fff 30%);
-    --sample-bg: #121723;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+    --bg: #0d0817;
+    --surface: #160f26;
+    --surface-2: #1f1634;
+    --border: #2d2148;
+    --text: #ece6f7;
+    --muted: #9d90b8;
+    --link: color-mix(in srgb, var(--cfm-accent) 62%, #fff 38%);
+    --sample-bg: #120c20;
+    --ok-bg: #12261e;
+    --bad-bg: #2b1220;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 28px rgba(0, 0, 0, 0.4);
   }
 }
 
 html:not([data-cfm="off"])[data-cfm-theme="dark"] {
   color-scheme: dark;
-  --bg: #0e121a;
-  --surface: #161b27;
-  --surface-2: #1d2434;
-  --border: #2a3347;
-  --text: #e6eaf3;
-  --muted: #94a0b8;
-  --link: color-mix(in srgb, var(--cfm-accent) 70%, #fff 30%);
-  --sample-bg: #121723;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+  --bg: #0d0817;
+  --surface: #160f26;
+  --surface-2: #1f1634;
+  --border: #2d2148;
+  --text: #ece6f7;
+  --muted: #9d90b8;
+  --link: color-mix(in srgb, var(--cfm-accent) 62%, #fff 38%);
+  --sample-bg: #120c20;
+    --ok-bg: #12261e;
+    --bad-bg: #2b1220;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
 /* ==========================================================================
@@ -72,7 +76,10 @@ html:not([data-cfm="off"]) {
   & body {
     background-color: var(--bg) !important;
     /* brilho suave da cor de destaque no topo da página */
-    background-image: radial-gradient(1100px 420px at 50% -140px, color-mix(in srgb, var(--cfm-accent) 16%, transparent), transparent) !important;
+    /* brilho suave no topo, como nas outras ferramentas Hiraku: destaque + roxo */
+    background-image:
+      radial-gradient(900px 380px at 30% -160px, color-mix(in srgb, var(--cfm-accent) 15%, transparent), transparent),
+      radial-gradient(900px 420px at 85% -120px, color-mix(in srgb, #6b3fa0 18%, transparent), transparent) !important;
     background-repeat: no-repeat !important;
     color: var(--text);
     font-family: var(--cfm-font);
@@ -367,15 +374,39 @@ html:not([data-cfm="off"]) {
     padding: 0.4em 0.65em;
     font-family: inherit;
   }
-  & input[type="text"]:focus,
-  & input[type="password"]:focus,
-  & input[type="number"]:focus,
-  & input[type="email"]:focus,
-  & select:focus,
-  & textarea:focus {
+  & :is(input:not([type]), input[type="text"], input[type="password"], input[type="number"], input[type="email"], input[type="search"], input[type="url"], select:not(.cfm-lang), textarea):focus {
     outline: none;
-    border-color: var(--cfm-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cfm-accent) 25%, transparent);
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--cfm-accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cfm-accent) 28%, transparent);
+  }
+  & ::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
+  & option,
+  & optgroup {
+    background: var(--surface);
+    color: var(--text);
+  }
+  /* preenchimento automático do navegador (fundo amarelo/azul claro com texto claro = invisível) */
+  & input:-webkit-autofill,
+  & input:-webkit-autofill:hover,
+  & input:-webkit-autofill:focus,
+  & textarea:-webkit-autofill,
+  & select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text) !important;
+    caret-color: var(--text);
+    box-shadow: 0 0 0 1000px var(--surface-2) inset !important;
+    transition: background-color 9999s ease-out 0s;
+  }
+  & input:autofill {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+  }
+  & ::selection {
+    color: inherit;
   }
 
   & input[type="submit"],
@@ -589,8 +620,29 @@ html:not([data-cfm="off"]) {
     overflow-x: auto;
     border: 0;
   }
+  & .problem-statement .test-example-line {
+    color: var(--text) !important;
+    background-color: transparent !important;
+    border-radius: 4px;
+  }
   & .problem-statement .test-example-line-even {
-    background: color-mix(in srgb, var(--surface-2) 70%, transparent) !important;
+    background-color: color-mix(in srgb, var(--surface-2) 70%, transparent) !important;
+  }
+  /* Exemplos com vários testes: ao passar o mouse o Codeforces pinta as linhas do teste
+     com background-color: #FFFDE7 inline (creme) — com texto claro ficava ilegível.
+     Trocamos pelo destaque do tema, que funciona nos dois modos. */
+  & .problem-statement .test-example-line[style*="background" i] {
+    background-color: color-mix(in srgb, var(--cfm-accent) 20%, var(--sample-bg)) !important;
+    box-shadow: inset 3px 0 0 var(--cfm-accent);
+  }
+  /* o numerozinho do teste que aparece à esquerda */
+  & .testCaseMarker {
+    padding: 0 6px;
+    border-radius: 6px;
+    background: var(--cfm-accent) !important;
+    color: var(--cfm-on-accent) !important;
+    font: 600 11px/1.6 var(--cfm-mono) !important;
+    text-align: center;
   }
   & .problem-statement .input-output-copier {
     position: static !important;
@@ -1005,4 +1057,107 @@ html:not([data-cfm="off"]) {
   height: 3px;
   background: var(--cfm-accent);
   transition: width 0.2s ease;
+}
+
+/* ==========================================================================
+   Standings: busca e "college standings" (content/standings.js)
+   ========================================================================== */
+
+.cfm-st-bar {
+  position: static;
+  margin: 0 0 12px;
+}
+.cfm-seg {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--surface-2, #f1ecf7);
+  border: 1px solid var(--border, #e5ddef);
+  border-radius: 10px;
+}
+.cfm-seg button,
+html:not([data-cfm="off"]) .cfm-seg button {
+  padding: 6px 12px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: var(--muted, #6c6185) !important;
+  font: inherit !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  filter: none !important;
+}
+.cfm-seg button.on,
+html:not([data-cfm="off"]) .cfm-seg button.on {
+  background: var(--cfm-accent) !important;
+  color: var(--cfm-on-accent) !important;
+}
+.cfm-st-search,
+html:not([data-cfm="off"]) .cfm-st-search {
+  flex: 0 1 260px;
+  min-width: 160px;
+  padding: 7px 12px !important;
+  border: 1px solid var(--border, #e5ddef) !important;
+  border-radius: 10px !important;
+  background: var(--surface-2, #f1ecf7) !important;
+  color: var(--text, #1d1530) !important;
+  font: inherit !important;
+}
+tr[data-cfm-st-out],
+tr[data-cfm-st-miss] {
+  display: none !important;
+}
+.cfm-st-wrap {
+  overflow-x: auto;
+}
+table.cfm-st-table {
+  width: 100%;
+  font-size: 13px;
+  text-align: center;
+}
+table.cfm-st-table :is(th, td) {
+  padding: 6px 8px;
+}
+table.cfm-st-table .cfm-st-who {
+  text-align: left;
+  white-space: nowrap;
+}
+table.cfm-st-table .cfm-st-muted,
+table.cfm-st-table .cfm-st-team {
+  color: var(--muted, #6c6185);
+}
+table.cfm-st-table td small {
+  display: block;
+  color: var(--muted, #6c6185);
+  font-size: 10px;
+}
+table.cfm-st-table .cfm-st-ok b { color: var(--ok, #2ea043); }
+table.cfm-st-table .cfm-st-bad b { color: var(--bad, #e5484d); }
+html[data-cfm-theme="dark"]:not([data-cfm="off"]) table.cfm-st-table .cfm-st-ok b { color: #3fbf63; }
+html[data-cfm-theme="dark"]:not([data-cfm="off"]) table.cfm-st-table .cfm-st-bad b { color: #ff6b6b; }
+
+/* ==========================================================================
+   Qualidade de vida (valem mesmo com o visual desligado)
+   ========================================================================== */
+
+/* anti-spoiler: tags e dificuldade borradas até passar o mouse */
+html[data-cfm-hide-tags] :is(.tag-box, table.problems td div[style*="float: right" i] a, .ProblemRating) {
+  filter: blur(5px);
+  transition: filter 0.15s ease;
+}
+html[data-cfm-hide-tags] :is(.roundbox, td):hover :is(.tag-box, a, .ProblemRating) {
+  filter: none;
+}
+
+/* esconder problemas resolvidos */
+html[data-cfm-hide-solved] :is(table.problems, .problems) tr:is(.accepted-problem, :has(> td.accepted-problem)) {
+  display: none;
+}
+
+/* marca da extensão nas barras */
+.cfm-mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  filter: none !important;
 }

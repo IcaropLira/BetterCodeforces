@@ -6,7 +6,7 @@
   g.CFM_DEFAULTS = {
     enabled: true,          // aplica o novo visual
     theme: 'auto',          // auto | light | dark
-    accent: '#5b7cfa',      // cor de destaque
+    accent: '#ee3d8b',      // cor de destaque (rosa Hiraku)
     font: 'system',         // system | serif | mono
     fontSize: 16,           // tamanho do texto do enunciado (px)
     engine: 'google',       // google | deepl
@@ -15,6 +15,10 @@
     autoTranslate: false,   // traduzir sozinho ao abrir um problema
     uiLang: 'auto',         // idioma da interface: auto | en | pt
     mathWaitMs: 6000,       // quanto esperar o MathJax terminar antes de traduzir
+    hideTags: false,        // anti-spoiler: borra tags e dificuldade até passar o mouse
+    hideSolved: false,      // esconde problemas já resolvidos na lista de problemas
+    orgId: '',              // organização do college standings ('' = a do seu perfil)
+    collegeDefault: false,  // abrir standings já filtrado pela instituição
   };
 
   // `deepl` = código aceito pelo DeepL (ausente = DeepL não suporta).

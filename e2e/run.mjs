@@ -8,6 +8,7 @@
 //
 // Uso:  npm run build && CHROMIUM_PATH=/caminho/do/chrome npm run test:e2e
 //       (sem CHROMIUM_PATH usa o Chromium do Playwright: npx playwright-core install chromium)
+//       O Google Chrome de marca 137+ ignora --load-extension: use Chromium.
 import https from 'node:https';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';

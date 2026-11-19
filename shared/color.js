@@ -183,6 +183,32 @@
   };
 
   /**
+   * Um pixel da logo no tema escuro.
+   * Cores vivas e opacas (as barras amarela/azul/vermelha) ficam como estão.
+   * O resto passa por "color to alpha" contra o branco: o branco some (inclusive o
+   * miolo das letras, que o flood fill não alcança), o cinza do antisserrilhado vira
+   * tinta com alfa parcial (sem contorno cinza em volta das letras) e a tinta escura
+   * resultante é clareada mantendo a matiz.
+   */
+  function logoPixel(data, p, a, target) {
+    const r = data[p], g = data[p + 1], b = data[p + 2];
+    if (chroma({ r, g, b }) >= 120) return; // cor viva: intacta
+    const k = Math.max(255 - r, 255 - g, 255 - b) / 255; // quanto o pixel "não é branco"
+    if (k < 0.02) {
+      data[p + 3] = 0;
+      return;
+    }
+    const pure = { r: 255 - (255 - r) / k, g: 255 - (255 - g) / k, b: 255 - (255 - b) / k };
+    const { h: hue, s, l } = rgbToHsl(pure);
+    const dark = 1 - smooth(0.3, 0.42, l); // 1 = tinta escura, 0 = cor clara
+    const lit = s < 0.12 ? target : hslToRgb(hue, s, Math.min(0.9, Math.max(0.68, 1 - l)));
+    data[p] = Math.round(pure.r * (1 - dark) + lit.r * dark);
+    data[p + 1] = Math.round(pure.g * (1 - dark) + lit.g * dark);
+    data[p + 2] = Math.round(pure.b * (1 - dark) + lit.b * dark);
+    data[p + 3] = Math.round(a * k);
+  }
+
+  /**
    * Adapta ao tema escuro uma imagem "de marca" (logo do site, selo do patrocinador),
    * alterando os pixels RGBA em `data` (Uint8ClampedArray de w×h).
    *
@@ -190,15 +216,15 @@
    *     O que está cercado por cor (o aviãozinho branco do Telegram) é preservado.
    *  2. Franja: pixels de borda misturados com o branco do fundo perdem opacidade,
    *     para não sobrar um "halo" claro em volta do desenho.
-   *  3. mode 'logo': tinta escura (texto preto, azul-marinho…) tem a luminosidade
-   *     invertida mantendo a matiz; cores vivas (as barras amarela/azul/vermelha) ficam intactas.
+   *  3. mode 'logo': todo o branco some (color to alpha, ver logoPixel), a tinta escura
+   *     (texto preto, azul-marinho…) clareia mantendo a matiz e as cores vivas ficam intactas.
    *     mode 'badge': só o fundo é removido.
    *
    * `ink` = cor do texto quando a tinta é cinza/preta (padrão: texto do tema escuro).
    */
   function recolorBrand(data, w, h, mode, ink) {
     if (!w || !h || data.length < w * h * 4) return data;
-    const target = ink || { r: 230, g: 234, b: 243 };
+    const target = ink || { r: 236, g: 230, b: 247 }; // --text do tema escuro
     const n = w * h;
     const backdrop = (i) => {
       const a = data[i * 4 + 3];
@@ -254,19 +280,13 @@
       }
       let a = data[p + 3];
       if (!a) continue;
+      if (mode === 'logo') {
+        logoPixel(data, p, a, target);
+        continue;
+      }
       if (fringe[i]) {
         const whiteness = Math.min(data[p], data[p + 1], data[p + 2]) / 255;
         if (whiteness > 0.5) a *= clamp(1 - (whiteness - 0.5) * 2, 0, 1);
-      }
-      if (mode === 'logo') {
-        const { h: hue, s, l } = rgbToHsl({ r: data[p], g: data[p + 1], b: data[p + 2] });
-        const k = 1 - smooth(0.3, 0.42, l); // 1 = tinta escura, 0 = cor viva/clara
-        if (k > 0) {
-          const out = s < 0.12 ? target : hslToRgb(hue, s, Math.min(0.9, 1 - l));
-          data[p] = Math.round(data[p] * (1 - k) + out.r * k);
-          data[p + 1] = Math.round(data[p + 1] * (1 - k) + out.g * k);
-          data[p + 2] = Math.round(data[p + 2] * (1 - k) + out.b * k);
-        }
       }
       data[p + 3] = Math.round(a);
     }
