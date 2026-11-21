@@ -106,6 +106,18 @@
         <input id="hideSolved" type="checkbox">
       </label>
 
+      <div class="row col">
+        <span class="label" data-i18n="heatmap">Profile heatmap</span>
+        <select id="heatmapMode">
+          <option value="cf" data-i18n="hm_cf">Codeforces colors</option>
+          <option value="solved" data-i18n="hm_solved">Problems solved</option>
+          <option value="subs" data-i18n="hm_subs">Submissions</option>
+          <option value="max" data-i18n="hm_max">Hardest problem of the day</option>
+          <option value="avg" data-i18n="hm_avg">Average difficulty of the day</option>
+        </select>
+      </div>
+      <button id="openAnalytics" class="wide" type="button" data-i18n="anOpenPopup">Open analytics</button>
+
       <h3 data-i18n="college">College standings</h3>
       <div class="row col">
         <span class="label" data-i18n="orgId">Organization (ID or link; empty = from your profile)</span>

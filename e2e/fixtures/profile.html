@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>tester - Codeforces</title>
+<style>
+/* imita o layout do perfil do Codeforces: conteúdo à esquerda, sidebar à direita */
+body{background:#fff;color:#222;font:13px Arial;margin:0}
+a{color:#3b5998;text-decoration:none}
+#header{position:relative;height:72px;background:#fff;margin:8px 16px 0;border:1px solid #ddd}
+#header .lang-chooser{position:absolute;right:8px;top:30px}
+.menu-list-container{margin:8px 16px;border:1px solid #ddd;padding:6px 10px}
+.menu-list{list-style:none;margin:0;padding:0;display:flex;gap:14px}
+#body{margin:14px 16px;position:relative}
+#sidebar{position:absolute;right:0;top:0;width:280px;background:#f5f5f5;min-height:300px}
+#pageContent{margin-right:308px}
+.roundbox{border:1px solid #ddd;border-radius:6px;padding:10px;margin:10px 0;background:#fff}
+</style></head><body>
+<div id="header"><a href="/"><b>CODEFORCES</b></a>
+  <div class="lang-chooser"><a href="/profile/tester">tester</a> | <a href="/logout">Logout</a></div></div>
+<div class="menu-list-container"><ul class="menu-list main-menu-list"><li><a href="/">Home</a></li><li><a href="/problemset">Problemset</a></li><li><a href="/help">Help</a></li></ul></div>
+<div id="body">
+  <div id="sidebar"><div class="roundbox">sidebar</div></div>
+  <div id="pageContent" class="content-with-sidebar">
+    <div class="roundbox userbox" id="userbox"><div class="info"><h1>tester</h1>
+      <p>From <a href="/ratings/organization/77">UFCG</a></p></div></div>
+    <div class="_UserActivityFrame_frame"><div class="roundbox userActivityRoundBox">
+      <div class="_UserActivityFrame_header"><span class="_UserActivityFrame_caption">Activity</span></div>
+      <div id="userActivityGraph"></div>
+      <div class="_UserActivityFrame_footer">233 problems solved for all time</div>
+    </div></div>
+  </div>
+</div>
+<script>
+// o Codeforces desenha o calendário (52 semanas) com um <rect class="day" data-date="M/D/AAAA"> por dia
+(function () {
+  var ns = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 721 110');
+  var g = document.createElementNS(ns, 'g');
+  svg.appendChild(g);
+  var today = new Date(); today.setHours(12, 0, 0, 0);
+  var start = new Date(today); start.setDate(start.getDate() - 363);
+  for (var i = 0; i < 364; i++) {
+    var d = new Date(start); d.setDate(start.getDate() + i);
+    var r = document.createElementNS(ns, 'rect');
+    r.setAttribute('class', 'day');
+    r.setAttribute('width', '11'); r.setAttribute('height', '11');
+    r.setAttribute('x', String(Math.floor(i / 7) * 13)); r.setAttribute('y', String((i % 7) * 13));
+    r.setAttribute('fill', '#EBEDF0');
+    r.setAttribute('data-items', '');
+    r.setAttribute('data-date', (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear());
+    g.appendChild(r);
+  }
+  document.getElementById('userActivityGraph').appendChild(svg);
+})();
+</script>
+</body></html>

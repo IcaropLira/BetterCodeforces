@@ -19,6 +19,7 @@
     hideSolved: false,      // esconde problemas já resolvidos na lista de problemas
     orgId: '',              // organização do college standings ('' = a do seu perfil)
     collegeDefault: false,  // abrir standings já filtrado pela instituição
+    heatmapMode: 'cf',      // heatmap do perfil: cf | solved | subs | max | avg
   };
 
   // `deepl` = código aceito pelo DeepL (ausente = DeepL não suporta).

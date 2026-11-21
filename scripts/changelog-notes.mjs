@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Imprime as notas de uma versão a partir do CHANGELOG.md (usado pelo workflow Release).
+// Imprime as notas de uma versão (usado pelo workflow Release).
 //   node scripts/changelog-notes.mjs 0.3.1
-import { readFileSync } from 'node:fs';
+// Se existir docs/release-notes/v<versão>.md (texto da release escrito à mão), usa ele;
+// senão, a seção "## <versão>" do CHANGELOG.md.
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -14,6 +16,11 @@ export function notesFor(text, version) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const version = (process.argv[2] || '').replace(/^v/, '');
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const custom = join(root, 'docs', 'release-notes', `v${version}.md`);
+  if (existsSync(custom)) {
+    console.log(readFileSync(custom, 'utf8').trim());
+    process.exit(0);
+  }
   const notes = notesFor(readFileSync(join(root, 'CHANGELOG.md'), 'utf8'), version);
   if (!notes) {
     console.error(`sem seção "## ${version}" no CHANGELOG.md`);
