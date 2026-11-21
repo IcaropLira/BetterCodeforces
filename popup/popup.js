@@ -120,6 +120,14 @@
       $(id).checked = !!s[id];
       $(id).addEventListener('change', (e) => save({ [id]: e.target.checked }));
     }
+    $('heatmapMode').value = s.heatmapMode;
+    $('heatmapMode').addEventListener('change', (e) => save({ heatmapMode: e.target.value }));
+    $('openAnalytics').addEventListener('click', async () => {
+      const me = (await ext.storage.local.get('an:me'))['an:me'];
+      const url = me ? `https://codeforces.com/profile/${encodeURIComponent(me)}#hiraku` : 'https://codeforces.com/#hiraku';
+      await ext.tabs.create({ url });
+      window.close();
+    });
     $('orgId').value = s.orgId;
     $('orgId').addEventListener('change', (e) => save({ orgId: e.target.value.trim() }));
 

@@ -18,6 +18,9 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
 import { chromium } from 'playwright-core';
+import * as mock from './mock-cf.mjs';
+import { createRequire } from 'node:module';
+
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = dirname(here);
@@ -42,6 +45,7 @@ const server = https
       res.writeHead(200, { 'content-type': 'application/json' });
       return res.end(JSON.stringify([[[out, q]], null, 'en']));
     }
+    if (mock.handle(pathname, searchParams, res, readFileSync(join(here, 'fixtures', 'profile.html')))) return;
     const icon = join(here, 'fixtures', pathname);
     if (pathname.startsWith('/icons/') && existsSync(icon)) {
       res.writeHead(200, { 'content-type': 'image/png' });
@@ -194,6 +198,89 @@ async function translation() {
   }
 }
 
+// Heatmap do perfil + página de analytics, contra o Codeforces falso (e2e/mock-cf.mjs).
+async function analytics(scheme) {
+  const ctx = await launch('full', scheme);
+  const shots = process.env.E2E_SHOTS;
+  try {
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    await page.setViewportSize({ width: 1400, height: 1000 });
+    await page.goto(`https://codeforces.com/profile/${mock.OWNER}`);
+    await page.waitForSelector('.cfm-hm-select');
+    const out = {};
+    out.nav = await page.evaluate(() => document.querySelector('[data-cfm-an-nav] a')?.getAttribute('href'));
+    const fills = () => page.evaluate(() => Array.from(document.querySelectorAll('#userActivityGraph rect.day')).map((r) => r.getAttribute('fill')));
+    out.before = new Set(await fills()).size;
+    await page.selectOption('.cfm-hm-select', 'solved');
+    page.on('console', (m) => process.env.E2E_DEBUG && console.log('   [console]', m.text()));
+    page.on('pageerror', (e) => console.log('   [pageerror]', e.message));
+    await page.waitForFunction(() => Array.from(document.querySelectorAll('#userActivityGraph rect.day')).some((r) => r.getAttribute('fill') !== '#EBEDF0' && r.getAttribute('data-cfm-tip')), null, { timeout: 30000 })
+      .catch(async (e) => {
+        console.log('   status:', await page.evaluate(() => document.querySelector('.cfm-hm-bar .cfm-status')?.textContent));
+        throw e;
+      });
+    out.solvedFills = new Set(await fills()).size;
+    out.legend = await page.evaluate(() => document.querySelectorAll('.cfm-hm-legend .cfm-hm-item').length);
+    out.tip = await page.evaluate(() => Array.from(document.querySelectorAll('#userActivityGraph rect[data-cfm-tip]')).map((r) => r.getAttribute('data-cfm-tip')).find((t) => /\d+ (solved|resolvidos)/.test(t) && !/^\S+ 0 /.test(t)));
+    await page.selectOption('.cfm-hm-select', 'max');
+    await page.waitForTimeout(300);
+    out.maxLegend = await page.evaluate(() => document.querySelectorAll('.cfm-hm-legend .cfm-hm-item').length);
+    if (shots) await page.locator('.cfm-hm-bar').evaluate((n) => n.scrollIntoView());
+    if (shots) await page.screenshot({ path: join(root, `e2e-heatmap-${scheme}.png`) });
+    await page.selectOption('.cfm-hm-select', 'cf');
+    await page.waitForTimeout(300);
+    out.restored = new Set(await fills()).size;
+
+    // analytics (visão geral)
+    await page.goto(`https://codeforces.com/profile/${mock.OWNER}#hiraku`);
+    await page.waitForSelector('.cfm-an-kpis', { timeout: 60000 });
+    await page.waitForSelector('.cfm-an-sug .cfm-an-list li a[href^="/problemset/problem/"]', { timeout: 60000 }); // sugestões
+    out.overview = await page.evaluate(() => ({
+      kpis: document.querySelectorAll('.cfm-an-kpi').length,
+      solved: document.querySelector('.cfm-an-kpi b')?.textContent,
+      cards: Array.from(document.querySelectorAll('.cfm-an-card h3')).map((n) => n.textContent),
+      svgs: document.querySelectorAll('.cfm-an svg.cfm-an-svg').length,
+      sidebarHidden: getComputedStyle(document.getElementById('sidebar')).display === 'none',
+      originalHidden: getComputedStyle(document.getElementById('userbox')).display === 'none',
+      trying: Array.from(document.querySelectorAll('.cfm-an-list li a')).map((a) => a.textContent).includes('Pending Problem'),
+    }));
+    if (shots) await page.screenshot({ path: join(root, `e2e-analytics-${scheme}.png`), fullPage: true });
+
+    // amigos
+    await page.click('.cfm-an-tabs button:nth-child(2)');
+    await page.waitForFunction((n) => document.querySelectorAll('table.cfm-an-table tbody tr').length === n
+      && !document.querySelector('table.cfm-an-table .cfm-an-spin'), mock.FRIENDS.length + 1, { timeout: 90000 });
+    out.friends = await page.evaluate(() => ({
+      rows: Array.from(document.querySelectorAll('table.cfm-an-table tbody tr')).map((tr) => tr.children[1].textContent.trim()),
+      owner: document.querySelectorAll('table.cfm-an-table tr.is-owner').length,
+      deltas: document.querySelectorAll('table.cfm-an-table .cfm-an-delta').length,
+      chart: document.querySelectorAll('.cfm-an-hrow').length,
+    }));
+    if (shots) await page.screenshot({ path: join(root, `e2e-friends-${scheme}.png`), fullPage: true });
+
+    // ordenar por rating (clique no cabeçalho)
+    await page.click('table.cfm-an-table th:nth-child(3)');
+    out.sorted = await page.evaluate(() => Array.from(document.querySelectorAll('table.cfm-an-table tbody tr')).map((tr) => Number(tr.children[2].textContent) || 0));
+
+    // instituição
+    await page.click('.cfm-an-tabs button:nth-child(3)');
+    await page.waitForFunction(() => document.querySelectorAll('table.cfm-an-table tbody tr').length >= 4
+      && !document.querySelector('table.cfm-an-table .cfm-an-spin'), null, { timeout: 90000 });
+    out.org = await page.evaluate(() => ({
+      rows: Array.from(document.querySelectorAll('table.cfm-an-table tbody tr')).map((tr) => tr.children[1].textContent.trim()),
+      title: document.querySelector('.cfm-an-cmphead h3')?.textContent,
+    }));
+
+    // sair do analytics devolve o perfil
+    await page.click('.cfm-an-back');
+    await page.waitForFunction(() => !document.querySelector('.cfm-an'));
+    out.back = await page.evaluate(() => getComputedStyle(document.getElementById('userbox')).display !== 'none' && getComputedStyle(document.getElementById('sidebar')).display !== 'none');
+    return out;
+  } finally {
+    await ctx.close();
+  }
+}
+
 let failed = false;
 const check = (name, fn) => {
   try { fn(); console.log('  ✔', name); } catch (e) { failed = true; console.log('  ✖', name, '\n   ', e.message.split('\n')[0]); }
@@ -292,6 +379,39 @@ try {
     assert.deepEqual(t.back.ids, t.before.ids);
     assert.deepEqual(t.back.sections, t.before.sections);
   });
+
+  const expected = createRequire(import.meta.url)('../shared/stats.js').summarize(mock.submissions(mock.OWNER));
+  for (const scheme of ['dark', 'light']) {
+    const a = await analytics(scheme);
+    console.log(`Heatmap e analytics (${scheme})`);
+    check('menu do topo ganha "Analytics" apontando para o seu perfil', () => assert.equal(a.nav, '/profile/tester#hiraku'));
+    check('heatmap: "Problemas resolvidos" recolore os dias (várias intensidades)', () => assert.ok(a.solvedFills >= 4, `só ${a.solvedFills} cores`));
+    check('heatmap: legenda da contagem (5 níveis) e da dificuldade (7 ranks)', () => { assert.equal(a.legend, 5); assert.equal(a.maxLegend, 7); });
+    check('heatmap: tooltip com resolvidos e envios do dia', () => assert.match(a.tip || '', /solved|resolvidos/));
+    check('heatmap: voltar para "Cores do Codeforces" restaura o original', () => assert.equal(a.restored, a.before));
+    check('analytics: 8 números, gráficos e o total de resolvidos certo', () => {
+      assert.equal(a.overview.kpis, 8);
+      assert.equal(a.overview.solved.replace(/\D/g, ''), String(expected.solved));
+      assert.ok(a.overview.svgs >= 4, `${a.overview.svgs} gráficos`);
+      assert.ok(a.overview.cards.length >= 9, a.overview.cards.join(', '));
+    });
+    check('analytics: ocupa a página (sidebar e perfil escondidos) e mostra "tentando agora"', () => {
+      assert.ok(a.overview.sidebarHidden && a.overview.originalHidden);
+      assert.ok(a.overview.trying);
+    });
+    check('amigos: você + amigos, sua linha destacada, comparação e gráfico', () => {
+      assert.equal(a.friends.rows.length, mock.FRIENDS.length + 1);
+      assert.equal(a.friends.owner, 1);
+      assert.ok(a.friends.deltas >= mock.FRIENDS.length, `${a.friends.deltas} comparações`);
+      assert.equal(a.friends.chart, mock.FRIENDS.length + 1);
+    });
+    check('amigos: ordenar por rating pelo cabeçalho', () => assert.deepEqual(a.sorted, a.sorted.slice().sort((x, y) => y - x)));
+    check('instituição: membros da organização do perfil (handle inexistente descartado)', () => {
+      assert.deepEqual(a.org.rows.map((r) => r.replace(/\s*(você|you)$/, '')).sort(), ['alice', 'dave', 'erin', 'tester']);
+      assert.match(a.org.title || '', /UFCG/);
+    });
+    check('voltar ao perfil restaura a página', () => assert.ok(a.back));
+  }
 } finally {
   server.close();
   rmSync(work, { recursive: true, force: true });

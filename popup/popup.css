@@ -189,3 +189,19 @@ kbd {
 [hidden] { display: none !important; }
 
 .privacy { margin: 0 0 8px; }
+
+button.wide {
+  width: 100%;
+  margin: 10px 0 4px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--grad);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+button.wide:hover { filter: brightness(1.07); }

@@ -220,8 +220,8 @@
     for (const b of ui.seg.querySelectorAll('button')) b.classList.toggle('on', b.dataset.v === mode);
   }
 
-  async function resolveOrg(onProgress) {
-    let id = parseOrgId(settings.orgId);
+  async function resolveOrg(onProgress, orgId = settings.orgId) {
+    let id = parseOrgId(orgId);
     let name = '';
     if (!id) {
       const me = await myOrg();
@@ -298,6 +298,14 @@
     PATH,
     parseOrgId,
     buildApiTable,
+    // reaproveitados pela página de analytics
+    myOrg,
+    orgMembers,
+    /** Organização configurada (ou a do perfil) com a lista de membros. */
+    org: (orgId, onProgress) => resolveOrg(onProgress, orgId ?? settings.orgId),
+    setT(t) {
+      T = t;
+    },
     /** Chamado pelo content.js quando as configurações carregam ou mudam. */
     update(s, t) {
       settings = s;

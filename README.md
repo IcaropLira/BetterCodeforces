@@ -21,6 +21,8 @@ A **Chrome and Firefox** extension that gives [Codeforces](https://codeforces.co
 
 **Quality of life**
 - **College standings:** on any standings page, filter by handle/team or switch to *My institution* — every participant from your Codeforces organization with their position inside it and overall (regular contests); on gyms/groups it filters the open page.
+- **Profile heatmap with modes:** color the green squares by problems solved, submissions, or the hardest / average difficulty of each day.
+- **Hiraku Analytics** (`/profile/<handle>#hiraku`, "Analytics" in the top menu): your numbers and charts (difficulty, months, rating, tags, verdicts, languages, streaks), what you are trying now, what to solve next, and a side-by-side comparison with your friends and your institution.
 - **Anti-spoiler:** blur tags and difficulty until you hover.
 - **Hide solved problems** in the problem list.
 
@@ -68,6 +70,10 @@ content/contrast.js    dark-mode contrast engine
 content/icons.js       light/dark icon detection
 content/content.js     settings, DOM reading, translation, toolbar
 content/standings.js   standings search and college standings
+content/cfapi.js       Codeforces API queue (1 call / 2 s) and caches
+content/heatmap.js     profile heatmap modes
+content/analytics.js   Hiraku Analytics page (#hiraku on a profile)
+shared/stats.js        metrics from submissions (pure, tested)
 content/mark.js        the extension mark used in the injected bars
 brand/                 logo sources (SVG; the -small variant is for 16/32 px)
 shared/                defaults, i18n, color math, TeX protection
