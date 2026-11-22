@@ -15,6 +15,8 @@
   const GAP_MS = 2100;
   const SUM_TTL = 30 * 60 * 1000;
   const PS_TTL = 24 * 3600 * 1000;
+  const IDX_TTL = 12 * 3600 * 1000; // quem resolveu o quê (página do problema)
+  const LIST_TTL = 24 * 3600 * 1000; // listas de amigos / membros
 
   let last = 0;
   let chain = Promise.resolve();
@@ -105,13 +107,60 @@
   /** Resumo (completo) de um handle, e o compacto vai para o cache. */
   async function fullSummary(handle) {
     const sum = S.summarize(await status(handle));
-    setStore({ [`an:sum:${handle.toLowerCase()}`]: { ...S.compact(sum), t: Date.now() } });
+    const h = handle.toLowerCase();
+    setStore({
+      [`an:sum2:${h}`]: { ...S.compact(sum), t: Date.now() },
+      [`an:idx:${h}`]: { t: Date.now(), idx: S.solvedIndex(sum) },
+    });
     return sum;
+  }
+
+  /**
+   * O que um handle resolveu/tentou ({ chave: ts }, positivo = AC). Usa o cache se
+   * existir; `stale` diz se ele já passou da validade (o chamador decide se atualiza).
+   */
+  async function solvedIndex(handle, { fetchIfMissing = true, fresh = false } = {}) {
+    const c = await getStore(`an:idx:${handle.toLowerCase()}`);
+    if (c && !fresh) return { idx: c.idx, t: c.t, stale: Date.now() - c.t > IDX_TTL };
+    if (!fetchIfMissing && !fresh) return null;
+    await fullSummary(handle);
+    const n = await getStore(`an:idx:${handle.toLowerCase()}`);
+    return n ? { idx: n.idx, t: n.t, stale: false } : null;
+  }
+
+  /**
+   * Pessoas de um grupo, com rating, dos mais ativos para os menos.
+   * kind: 'friends' (sua lista de amigos) | 'org' (organização configurada ou a do perfil).
+   * Devolve { title, name, people: [{ handle, rating, lastOnline }] } — cache de 24 h.
+   */
+  async function group(kind, { orgId = '', onProgress } = {}) {
+    const key = `an:list:${kind}:${kind === 'org' ? orgId || 'me' : me().toLowerCase()}`;
+    const c = await getStore(key);
+    if (c && Date.now() - c.t < LIST_TTL) return c;
+    let list;
+    let name = '';
+    if (kind === 'friends') {
+      list = (await friends()).map((x) => x.h);
+    } else {
+      const org = await globalThis.CFM_STANDINGS.org(orgId, onProgress);
+      list = Object.values(org.members).map((m) => m.h);
+      name = org.name;
+    }
+    const infos = await info(list);
+    const out = {
+      t: Date.now(),
+      name,
+      people: infos
+        .map((u) => ({ handle: u.handle, rating: u.rating, lastOnline: u.lastOnlineTimeSeconds || 0 }))
+        .sort((a, b) => b.lastOnline - a.lastOnline),
+    };
+    setStore({ [key]: out });
+    return out;
   }
 
   /** Resumo compacto (cache de 30 min). */
   async function summary(handle, { fresh = false } = {}) {
-    const key = `an:sum:${handle.toLowerCase()}`;
+    const key = `an:sum2:${handle.toLowerCase()}`;
     if (!fresh) {
       const c = await getStore(key);
       if (c && Date.now() - c.t < SUM_TTL) return c;
@@ -156,5 +205,5 @@
     return a ? decodeURIComponent(a.getAttribute('href').split('/').pop()) : '';
   }
 
-  globalThis.CFM_API = { call, status, info, rating, summary, fullSummary, problemset, friends, me, getStore, setStore };
+  globalThis.CFM_API = { call, status, info, rating, summary, fullSummary, solvedIndex, group, problemset, friends, me, getStore, setStore };
 })();

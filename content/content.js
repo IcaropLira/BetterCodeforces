@@ -53,6 +53,7 @@
     if (globalThis.CFM_STANDINGS) globalThis.CFM_STANDINGS.update(s, T);
     if (globalThis.CFM_HEATMAP) globalThis.CFM_HEATMAP.update(s, T);
     if (globalThis.CFM_ANALYTICS) globalThis.CFM_ANALYTICS.update(s, T);
+    if (globalThis.CFM_SOLVEDBY) globalThis.CFM_SOLVEDBY.update(s, T);
   }
 
   // Motor de contraste e tratamento de ícones: só no tema escuro.

@@ -29,6 +29,25 @@
     return m ? decodeURIComponent(m[1]) : '';
   };
   const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString());
+  const fmt1 = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 1, minimumFractionDigits: n > 0 && n < 10 ? 1 : 0 }));
+
+  /** Baixa um arquivo gerado aqui mesmo (nada sai do navegador). */
+  function download(name, text, type) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = h('a', { href: url, download: name, hidden: true });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  const stamp = () => S.dayKey(Date.now() / 1000);
+  const slug = (x) => String(x).replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'export';
+
+  function exportButtons(items) {
+    return h('div', { class: 'cfm-an-export', role: 'group', 'aria-label': T('anExport') },
+      h('span', { class: 'cfm-an-export-l' }, T('anExport')),
+      items.map(([label, fn, tip]) => h('button', { type: 'button', class: 'cfm-an-xbtn', title: tip || '', onclick: fn }, label)));
+  }
   const pct = (x) => `${Math.round(x * 100)}%`;
 
   function h(tag, attrs = {}, ...kids) {
@@ -154,9 +173,11 @@
       svg.append(s('circle', { cx: X(r.ratingUpdateTimeSeconds), cy: Y(r.newRating), r: 4, class: 'cfm-an-dot', style: `fill:${S.rankColor(r.newRating, isDark())}` }));
       svg.append(s('circle', { cx: X(r.ratingUpdateTimeSeconds), cy: Y(r.newRating), r: 10, fill: 'transparent', 'data-cfm-tip': tip }));
     });
-    const year = (t) => String(new Date(t * 1000).getFullYear());
-    svg.append(s('text', { x: padL, y: H - 6, class: 'cfm-an-axis' }, year(x0)));
-    svg.append(s('text', { x: W - 10, y: H - 6, class: 'cfm-an-axis', 'text-anchor': 'end' }, year(x1)));
+    // mês/ano quando o histórico cabe num ano; só o ano quando é mais longo
+    const short = x1 - x0 < 400 * DAY;
+    const when = (t) => new Date(t * 1000).toLocaleDateString(undefined, short ? { month: 'short', year: '2-digit' } : { year: 'numeric' });
+    svg.append(s('text', { x: padL, y: H - 6, class: 'cfm-an-axis' }, when(x0)));
+    svg.append(s('text', { x: W - 10, y: H - 6, class: 'cfm-an-axis', 'text-anchor': 'end' }, when(x1)));
     return svg;
   }
 
@@ -235,7 +256,11 @@
       kpi(T('anHardest'), sum.maxRating ? String(sum.maxRating) : '—', sum.max30 ? T('anIn30', { n: sum.max30 }) : null),
       kpi(T('anAcRate'), pct(sum.acRate), T('anAcSubs', { n: fmt(sum.acSubs) })),
       kpi(T('anActive'), `${sum.activeDays30}/30`, T('anActiveSub')),
-      kpi(T('anContests'), fmt(ratingHist.length), info && info.maxRating ? T('anMaxRating', { n: info.maxRating }) : null));
+      kpi(T('anContests'), fmt(ratingHist.length), info && info.maxRating ? T('anMaxRating', { n: info.maxRating }) : null),
+      kpi(T('anPerDay'), fmt1(sum.perDay.d30), T('anPerDaySub', { n: fmt1(sum.perDay.active30) })),
+      kpi(T('anFirstTry'), pct(sum.firstTryRate), T('anTriesPer', { n: fmt1(sum.triesPerSolved) })),
+      kpi(T('an365'), fmt(sum.solved365), T('an90', { n: fmt(sum.solved90) })),
+      kpi(T('anUpsolve'), fmt(sum.upsolve.length), T('anUpsolveSub')));
 
     // calendário
     let calMode = settings.heatmapMode && settings.heatmapMode !== 'cf' ? settings.heatmapMode : 'solved';
@@ -294,6 +319,66 @@
     sugTag.addEventListener('change', drawSug);
     drawSug();
 
+    // ritmo
+    const pace = hbars([
+      { label: T('anPace30'), value: +sum.perDay.d30.toFixed(2), tip: T('anPaceTip', { n: fmt1(sum.perDay.d30), p: T('anPace30') }) },
+      { label: T('anPace90'), value: +sum.perDay.d90.toFixed(2), tip: T('anPaceTip', { n: fmt1(sum.perDay.d90), p: T('anPace90') }) },
+      { label: T('anPace365'), value: +sum.perDay.d365.toFixed(2), tip: T('anPaceTip', { n: fmt1(sum.perDay.d365), p: T('anPace365') }) },
+      { label: T('anPaceActive'), value: +sum.perDay.active30.toFixed(2), tip: T('anPaceActiveTip', { n: fmt1(sum.perDay.active30) }) },
+    ]);
+
+    // dia da semana (começando na segunda) e horário
+    const wd = [1, 2, 3, 4, 5, 6, 0];
+    const wdName = (d) => new Date(2026, 10, 15 + d).toLocaleDateString(undefined, { weekday: 'short' }).replace('.', '');
+    const week = vbars(wd.map((d) => ({ label: wdName(d), value: sum.weekdaySolved[d], tip: `${wdName(d)}: ${T('hmSolvedN', { n: sum.weekdaySolved[d] })}` })), { height: 160 });
+    const hours = vbars(sum.hours.map((n, hr) => ({ label: `${hr}h`, value: n, tip: T('anHourTip', { h: hr, n }) })), { height: 160, labelEvery: 3 });
+
+    // nível mês a mês (na cor do rank) e acumulado
+    const lvl = vbars(Object.entries(sum.levelByMonth).map(([m, v]) => ({
+      label: new Date(`${m}-15T12:00`).toLocaleDateString(undefined, { month: 'short' }),
+      value: v || 0,
+      color: v ? S.rankColor(v, isDark()) : null,
+      tip: `${new Date(`${m}-15T12:00`).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}: ${v ? T('anLevelTip', { n: v }) : T('anNoRated')}`,
+    })), { height: 160 });
+    const cum = vbars(Object.entries(sum.cumulative).map(([m, v]) => ({
+      label: new Date(`${m}-15T12:00`).toLocaleDateString(undefined, { month: 'short' }),
+      value: v,
+      tip: `${new Date(`${m}-15T12:00`).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}: ${T('anCumTip', { n: fmt(v) })}`,
+    })), { height: 160 });
+
+    // tags: mais fortes e mais fracas (entre as que você tentou pelo menos 3 vezes)
+    const ts = S.tagStrength(sum.tagStats);
+    const tagRow = (x) => h('li', { 'data-cfm-tip': T('anTagTip', { tag: x.tag, s: x.solved, t: x.total }) },
+      h('span', { class: 'cfm-an-chip', style: `--c:${x.rate >= 0.8 ? 'var(--cfm-an-ok)' : x.rate < 0.5 ? '#e5484d' : 'var(--an-muted)'}` }, pct(x.rate)),
+      h('span', {}, x.tag), h('small', {}, `${x.solved}/${x.total}`));
+    const strong = ts.slice().sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 5);
+    const weak = ts.slice().sort((a, b) => a.rate - b.rate || b.total - a.total).filter((x) => x.rate < 1).slice(0, 5);
+    const tagsSW = ts.length
+      ? h('div', { class: 'cfm-an-two' },
+          h('div', {}, h('h4', {}, T('anStrong')), h('ul', { class: 'cfm-an-list' }, strong.map(tagRow))),
+          h('div', {}, h('h4', {}, T('anWeak')), weak.length ? h('ul', { class: 'cfm-an-list' }, weak.map(tagRow)) : h('p', { class: 'cfm-an-empty' }, T('anNoWeak'))))
+      : h('p', { class: 'cfm-an-empty' }, T('anTagsFew'));
+
+    // contests
+    const cs = S.contestStats(ratingHist);
+    const tone = (d) => (d > 0 ? 'cfm-an-up' : d < 0 ? 'cfm-an-down' : ''); // a cor segue o sinal
+    const signed = (d) => `${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d)}`;
+    const contests = cs.count
+      ? h('dl', { class: 'cfm-an-dl' },
+          h('dt', {}, T('anCsCount')), h('dd', {}, fmt(cs.count), h('small', {}, ` · ${T('anCsPositive', { n: cs.positive })}`)),
+          h('dt', {}, T('anCsCurrent')), h('dd', {}, ratingChip(cs.current), ' ', h('small', {}, `${T('anMax')} ${cs.max}`)),
+          h('dt', {}, T('anCsBestRank')), h('dd', {}, `#${fmt(cs.bestRank.rank)}`, h('small', {}, ` · ${cs.bestRank.name}`)),
+          h('dt', {}, T('anCsBest')), h('dd', {}, h('b', { class: tone(cs.best.d) }, signed(cs.best.d)), h('small', {}, ` · ${cs.best.name}`)),
+          h('dt', {}, T('anCsWorst')), h('dd', {}, h('b', { class: tone(cs.worst.d) }, signed(cs.worst.d)), h('small', {}, ` · ${cs.worst.name}`)),
+          h('dt', {}, T('anCsAvg')), h('dd', {}, h('b', { class: tone(cs.avgDelta) }, signed(cs.avgDelta))),
+          h('dt', {}, T('anCsLast5')), h('dd', {}, h('b', { class: tone(cs.last5) }, signed(cs.last5))))
+      : h('p', { class: 'cfm-an-empty' }, T('anNoContests'));
+
+    const upsolve = sum.upsolve.length
+      ? h('ul', { class: 'cfm-an-list' }, sum.upsolve.slice(0, 8).map((u) =>
+          h('li', {}, ratingChip(u.rating), u.url ? h('a', { href: u.url }, u.name) : h('span', {}, u.name), h('small', {}, ago(u.ts)))))
+      : h('p', { class: 'cfm-an-empty' }, T('anNoUpsolve'));
+
     return h('div', { class: 'cfm-an-body' },
       kpis,
       card(T('anCalendar'), calBox, calSelect),
@@ -304,6 +389,14 @@
         card(T('anTags'), tags.length ? hbars(tags) : h('p', { class: 'cfm-an-empty' }, '—')),
         card(T('anTrying'), trying),
         card(T('anSuggest'), sugBox, sugTag),
+        card(T('anUpsolveTitle'), upsolve),
+        card(T('anContestsTitle'), contests),
+        card(T('anPace'), pace),
+        card(T('anLevelMonth'), lvl),
+        card(T('anCumulative'), cum),
+        card(T('anTagStrength'), tagsSW),
+        card(T('anWeekday'), week),
+        card(T('anHours'), hours),
         card(T('anVerdicts'), hbars(verdicts, { total: sum.total })),
         card(T('anLangs'), hbars(langs, { total: sum.total }))));
   }
@@ -316,6 +409,7 @@
     { k: 'solved', label: 'anSolved', get: (r) => r.sum?.solved ?? -1 },
     { k: 'solved7', label: 'an7col', get: (r) => r.sum?.solved7 ?? -1 },
     { k: 'solved30', label: 'an30', get: (r) => r.sum?.solved30 ?? -1 },
+    { k: 'perDay', label: 'anPerDayCol', get: (r) => r.sum?.perDay30 ?? -1 },
     { k: 'avgRecent', label: 'anAvgRecent', get: (r) => r.sum?.avgRecent ?? -1 },
     { k: 'max30', label: 'anHardest30', get: (r) => r.sum?.max30 ?? -1 },
     { k: 'streak', label: 'anStreak', get: (r) => r.sum?.streak ?? -1 },
@@ -367,6 +461,7 @@
         h('td', {}, sm ? fmt(sm.solved) : r.error ? h('span', { class: 'muted', title: r.error }, '!') : h('span', { class: 'cfm-an-spin' })),
         h('td', {}, sm ? fmt(sm.solved7) : ''),
         h('td', {}, sm ? h('b', {}, fmt(sm.solved30)) : ''),
+        h('td', {}, sm && sm.perDay30 != null ? fmt1(sm.perDay30) : sm ? '—' : ''),
         h('td', {}, sm?.avgRecent ? ratingChip(sm.avgRecent) : sm ? '—' : ''),
         h('td', {}, sm?.max30 ? ratingChip(sm.max30) : sm ? '—' : ''),
         h('td', {}, sm ? (sm.streak ? `🔥 ${sm.streak}` : '0') : ''),
@@ -398,29 +493,19 @@
       if (!group.all) {
         group.status = T('anLoadingList');
         renderCompare();
-        let list;
-        if (kind === 'friends') {
-          list = await API().friends();
-          group.title = T('anFriendsTitle', { n: list.length });
-        } else {
-          const org = await globalThis.CFM_STANDINGS.org(settings.orgId, (p, total) => {
+        const g = await API().group(kind, {
+          orgId: settings.orgId,
+          onProgress: (p, total) => {
             group.status = T('stLoadingOrgPage', { p, total });
             renderCompare();
-          });
-          list = Object.values(org.members).map((m) => ({ h: m.h, cls: m.cls }));
-          group.title = T('anOrgTitle', { org: org.name, n: list.length });
-        }
-        const handles = [owner, ...list.map((x) => x.h).filter((x) => x.toLowerCase() !== owner.toLowerCase())];
-        group.status = T('anLoadingInfo');
-        renderCompare();
-        const infos = await API().info(handles);
-        const byH = new Map(infos.map((u) => [u.handle.toLowerCase(), u]));
-        // os mais ativos primeiro (instituições podem ter milhares de membros)
-        group.all = handles
-          .map((x) => byH.get(x.toLowerCase()))
-          .filter(Boolean)
-          .map((u) => ({ handle: u.handle, rating: u.rating, lastOnline: u.lastOnlineTimeSeconds || 0, isOwner: u.handle.toLowerCase() === owner.toLowerCase() }))
-          .sort((a, b) => (b.isOwner - a.isOwner) || (b.lastOnline - a.lastOnline));
+          },
+        });
+        const others = g.people.filter((x) => x.handle.toLowerCase() !== owner.toLowerCase());
+        group.title = kind === 'friends' ? T('anFriendsTitle', { n: others.length }) : T('anOrgTitle', { org: g.name, n: g.people.length });
+        let me = g.people.find((x) => x.handle.toLowerCase() === owner.toLowerCase());
+        if (!me) me = { handle: owner, rating: state.info?.rating, lastOnline: 0 };
+        // você primeiro, depois os mais ativos (instituições podem ter milhares de membros)
+        group.all = [{ ...me, isOwner: true }, ...others.map((x) => ({ ...x, isOwner: false }))];
       }
       group.rows = group.all.slice(0, group.limit + 1);
       const todo = group.rows.filter((r) => !r.sum && !r.error);
@@ -459,11 +544,32 @@
           T('anLoadMore', { n: Math.min(30, group.all.length - group.rows.length) }))
       : null;
     const chart = compareChart(group);
+    const gs = S.groupSummary(group.rows);
+    const gname = slug(`${state.handle}-${kind === 'friends' ? 'friends' : group.title.replace(/\s*\(.*$/, '') || 'org'}`);
+    const gExport = gs.n
+      ? exportButtons([
+          ['CSV', () => download(`${gname}-${stamp()}.csv`, S.groupCSV(group.rows), 'text/csv;charset=utf-8'), T('anExportGroupTip')],
+          ['JSON', () => download(`${gname}-${stamp()}.json`, JSON.stringify({
+            exportedAt: new Date().toISOString(), source: 'Hiraku Codeforces', group: group.title, owner: state.handle, summary: gs,
+            people: group.rows.map((r) => ({ handle: r.handle, rating: r.rating ?? null, isOwner: !!r.isOwner, ...(r.sum || {}) })),
+          }, null, 2), 'application/json'), T('anExportGroupTip')],
+        ])
+      : null;
+    const gk = gs.n
+      ? h('div', { class: 'cfm-an-kpis' },
+          kpi(T('anGPeople'), fmt(gs.n), T('anGActive7', { n: gs.active7 })),
+          kpi(T('anGTotal30'), fmt(gs.total30), T('anGAvg30', { n: fmt1(gs.avg30) })),
+          kpi(T('anGPerDay'), fmt1(gs.perDayPerPerson), T('anGPerDaySub')),
+          kpi(T('anGLevel'), gs.avgLevel ? String(gs.avgLevel) : '—', T('anGLevelSub')),
+          kpi(T('anGMost'), gs.mostActive.handle, T('hmSolvedN', { n: gs.mostActive.n })),
+          kpi(T('anGStreak'), gs.longestStreak.handle, T('anDaysN', { n: gs.longestStreak.n })))
+      : null;
     box.replaceChildren(h('div', { class: 'cfm-an-body' },
       h('div', { class: 'cfm-an-cmphead' },
         h('div', {}, h('h3', {}, group.title || (kind === 'friends' ? T('anFriends') : T('anOrg'))),
           h('p', { class: 'cfm-an-note' }, kind === 'org' ? T('anOrgNote') : T('anFriendsNote'))),
-        h('span', { class: 'cfm-status' }, group.status)),
+        h('div', { class: 'cfm-an-cmpside' }, h('span', { class: 'cfm-status' }, group.status), gExport)),
+      gk,
       chart ? card(T('anRank30'), chart) : null,
       group.rows.length ? compareTable(group) : null,
       more));
@@ -488,7 +594,33 @@
           info?.organization ? ` · ${info.organization}` : '')),
       h('nav', { class: 'cfm-an-tabs', role: 'tablist' },
         tabs.map(([k, label]) => h('button', { type: 'button', role: 'tab', 'aria-selected': String(state.tab === k), class: state.tab === k ? 'on' : '', onclick: () => switchTab(k) }, label))),
+      state.sum && state.tab === 'overview'
+        ? exportButtons([
+            ['CSV', () => download(`${slug(handle)}-solved-${stamp()}.csv`, S.solvedCSV(state.sum), 'text/csv;charset=utf-8'), T('anExportSolvedTip')],
+            ['JSON', () => download(`${slug(handle)}-analytics-${stamp()}.json`, personJSON(), 'application/json'), T('anExportJsonTip')],
+          ])
+        : null,
       h('a', { class: 'cfm-an-back', href: `/profile/${encodeURIComponent(handle)}` }, T('anBack')));
+  }
+
+  /** Tudo o que a visão geral mostra, num JSON (sem a lista crua de envios). */
+  function personJSON() {
+    const { handle, info, sum, ratingHist } = state;
+    const { solvedList, byDay, trying, ...rest } = sum;
+    return JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      source: 'Hiraku Codeforces',
+      handle,
+      rating: info?.rating ?? null,
+      maxRating: info?.maxRating ?? null,
+      organization: info?.organization || null,
+      summary: rest,
+      contests: S.contestStats(ratingHist),
+      ratingHistory: ratingHist.map((r) => ({ contestId: r.contestId, contest: r.contestName, rank: r.rank, oldRating: r.oldRating, newRating: r.newRating, date: S.dayKey(r.ratingUpdateTimeSeconds) })),
+      solved: solvedList.map((p) => ({ date: S.dayKey(p.ts), problem: p.key, name: p.name, rating: p.rating, tries: p.tries, tags: p.tags })),
+      tryingNow: sum.tryingNow,
+      daily: byDay,
+    }, null, 2);
   }
 
   function switchTab(k) {
@@ -528,7 +660,10 @@
       } catch (e) {
         state.ratingHist = [];
       }
-      if (state && state.root === root && state.tab === 'overview') panel.replaceChildren(overview());
+      if (state && state.root === root && state.tab === 'overview') {
+        headBox.replaceChildren(header());
+        panel.replaceChildren(overview());
+      }
     } catch (e) {
       panel.replaceChildren(h('p', { class: 'cfm-an-empty' }, e.message || String(e)));
     }

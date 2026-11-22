@@ -115,6 +115,9 @@
     const byDay = {}; // AAAA-MM-DD → { subs, ac, solved, ratings: [] }
     const verdicts = {};
     const langs = {};
+    const hours = new Array(24).fill(0); // envios por hora do dia
+    const weekdaySolved = new Array(7).fill(0); // resolvidos por dia da semana (0 = domingo)
+    const inContest = new Map(); // problemas tentados durante um contest (para o upsolve)
     let acSubs = 0;
 
     for (const s of ordered) {
@@ -126,6 +129,12 @@
       verdicts[v] = (verdicts[v] || 0) + 1;
       const lf = langFamily(s.programmingLanguage);
       langs[lf] = (langs[lf] || 0) + 1;
+      const when = new Date(s.creationTimeSeconds * 1000);
+      hours[when.getHours()]++;
+      const pt = s.author && s.author.participantType;
+      if (pt === 'CONTESTANT' || pt === 'OUT_OF_COMPETITION' || pt === 'VIRTUAL') {
+        inContest.set(key, { problem: s.problem, ts: s.creationTimeSeconds, type: pt });
+      }
 
       const a = attempts.get(key) || { problem: s.problem, n: 0, last: 0 };
       a.n++;
@@ -144,8 +153,12 @@
             name: s.problem.name,
             url: problemUrl(s.problem),
             ts: s.creationTimeSeconds,
+            tries: a.n, // envios até o primeiro AC (inclusive)
+            contestId: s.problem.contestId,
+            index: s.problem.index,
           });
           d.solved++;
+          weekdaySolved[when.getDay()]++;
           if (rating) d.ratings.push(rating);
         }
       }
@@ -203,6 +216,43 @@
 
     const lastTs = ordered.length ? ordered[ordered.length - 1].creationTimeSeconds : null;
 
+    // nível (dificuldade média dos resolvidos com rating) e acumulado, mês a mês
+    const monthLevel = Object.fromEntries(months.map((m) => [m, []]));
+    for (const p of rated) {
+      const m = monthKey(p.ts);
+      if (m in monthLevel) monthLevel[m].push(p.rating);
+    }
+    const levelByMonth = Object.fromEntries(months.map((m) => [m, avg(monthLevel[m])]));
+    const cumulative = {};
+    {
+      const firstMonth = months[0];
+      let acc = solvedList.filter((p) => monthKey(p.ts) < firstMonth).length;
+      for (const m of months) cumulative[m] = acc += perMonth[m];
+    }
+
+    // força por tag: entre os problemas que você tentou, quantos resolveu
+    const tagStats = {};
+    for (const [key, a] of attempts) {
+      for (const t of a.problem.tags || []) {
+        const x = (tagStats[t] ||= { solved: 0, unsolved: 0 });
+        if (solved.has(key)) x.solved++;
+        else x.unsolved++;
+      }
+    }
+
+    // upsolve: tentou num contest e nunca resolveu
+    const upsolve = [];
+    for (const [key, c] of inContest) {
+      if (solved.has(key)) continue;
+      upsolve.push({ key, name: c.problem.name, rating: typeof c.problem.rating === 'number' ? c.problem.rating : null, url: problemUrl(c.problem), ts: c.ts, contestId: c.problem.contestId });
+    }
+    upsolve.sort((a, b) => b.ts - a.ts);
+
+    const firstTry = solvedList.filter((p) => p.tries === 1).length;
+    const solved90 = since(90).length;
+    const solved365 = since(365).length;
+    const solvedDays30 = Object.keys(byDay).filter((k) => k >= dayKey(now - 29 * DAY) && byDay[k].solved > 0).length;
+
     return {
       total: list.length,
       acSubs,
@@ -225,6 +275,24 @@
       tryingNow: trying.filter((t) => t.ts >= now - 30 * DAY),
       lastTs,
       activeDays30: Object.keys(byDay).filter((k) => k >= dayKey(now - 29 * DAY)).length,
+      solved90,
+      solved365,
+      solvedDays30,
+      perDay: {
+        d30: solvedList.length ? last30.length / 30 : 0,
+        d90: solved90 / 90,
+        d365: solved365 / 365,
+        active30: solvedDays30 ? last30.length / solvedDays30 : 0, // nos dias em que resolveu algo
+      },
+      firstTry,
+      firstTryRate: solvedList.length ? firstTry / solvedList.length : 0,
+      triesPerSolved: solvedList.length ? solvedList.reduce((x, p) => x + p.tries, 0) / solvedList.length : 0,
+      hours,
+      weekdaySolved,
+      levelByMonth,
+      cumulative,
+      tagStats,
+      upsolve,
       ...streaks(byDay, now),
     };
   }
@@ -269,6 +337,10 @@
       acRate: sum.acRate,
       lastTs: sum.lastTs,
       activeDays30: sum.activeDays30,
+      solved90: sum.solved90,
+      solved365: sum.solved365,
+      perDay30: sum.perDay.d30,
+      firstTryRate: sum.firstTryRate,
       tryingNow: sum.tryingNow.slice(0, 3).map(({ name, url, rating, ts, tries }) => ({ name, url, rating, ts, tries })),
     };
   }
@@ -372,6 +444,118 @@
       .map(({ p, n }) => ({ name: p.name, rating: p.rating, url: problemUrl(p), tags: p.tags || [], solvedBy: n, key: problemKey(p) }));
   }
 
+  /* ------------------------- contests e grupos ------------------------- */
+
+  /** Números dos contests com rating (user.rating). */
+  function contestStats(hist) {
+    const h = Array.isArray(hist) ? hist : [];
+    if (!h.length) return { count: 0 };
+    const deltas = h.map((r) => ({ d: r.newRating - r.oldRating, name: r.contestName, rank: r.rank, id: r.contestId }));
+    const best = deltas.reduce((a, b) => (b.d > a.d ? b : a));
+    const worst = deltas.reduce((a, b) => (b.d < a.d ? b : a));
+    const bestRank = deltas.reduce((a, b) => (b.rank < a.rank ? b : a));
+    const last = h[h.length - 1];
+    const last5 = h.slice(-5);
+    return {
+      count: h.length,
+      current: last.newRating,
+      max: Math.max(...h.map((r) => r.newRating)),
+      best,
+      worst,
+      bestRank,
+      avgDelta: Math.round(deltas.reduce((a, b) => a + b.d, 0) / deltas.length),
+      last5: last5.length ? last.newRating - last5[0].oldRating : 0,
+      positive: deltas.filter((x) => x.d > 0).length,
+    };
+  }
+
+  /** Força por tag em lista ordenável: taxa = resolvidos / tentados. */
+  function tagStrength(tagStats, { min = 3 } = {}) {
+    return Object.entries(tagStats || {})
+      .map(([tag, x]) => ({ tag, solved: x.solved, unsolved: x.unsolved, total: x.solved + x.unsolved, rate: x.solved / Math.max(1, x.solved + x.unsolved) }))
+      .filter((x) => x.total >= min);
+  }
+
+  /** Resumo de um grupo (amigos / instituição) a partir das linhas carregadas. */
+  function groupSummary(rows) {
+    const done = (rows || []).filter((r) => r && r.sum);
+    if (!done.length) return { n: 0 };
+    const total30 = done.reduce((a, r) => a + (r.sum.solved30 || 0), 0);
+    const levels = done.map((r) => r.sum.avgRecent).filter(Boolean);
+    const top = (f) => done.reduce((a, r) => (f(r) > f(a) ? r : a));
+    const most = top((r) => r.sum.solved30 || 0);
+    const lvl = top((r) => r.sum.avgRecent || 0);
+    const streak = top((r) => r.sum.streak || 0);
+    return {
+      n: done.length,
+      active7: done.filter((r) => r.sum.solved7 > 0).length,
+      total30,
+      avg30: total30 / done.length,
+      perDayPerPerson: total30 / done.length / 30,
+      avgLevel: levels.length ? Math.round(levels.reduce((a, b) => a + b, 0) / levels.length) : null,
+      mostActive: { handle: most.handle, n: most.sum.solved30 || 0 },
+      highestLevel: { handle: lvl.handle, n: lvl.sum.avgRecent || null },
+      longestStreak: { handle: streak.handle, n: streak.sum.streak || 0 },
+    };
+  }
+
+  /* ------------------------------ exportação ------------------------------ */
+
+  /** CSV (RFC 4180, separador vírgula, BOM para o Excel abrir acentos). */
+  function toCSV(header, rows) {
+    const cell = (v) => {
+      if (v == null) return '';
+      const t = String(v);
+      // evita injeção de fórmula ao abrir no Excel/Sheets
+      const safe = /^[=+\-@\t\r]/.test(t) && !/^-?\d+(\.\d+)?$/.test(t) ? `'${t}` : t;
+      return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+    };
+    return '\ufeff' + [header, ...rows].map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';
+  }
+
+  const isoDate = (ts) => (ts ? dayKey(ts) : '');
+
+  /** Problemas resolvidos de uma pessoa, uma linha por problema. */
+  function solvedCSV(sum, base = 'https://codeforces.com') {
+    const rows = sum.solvedList
+      .slice()
+      .sort((a, b) => a.ts - b.ts)
+      .map((p) => [isoDate(p.ts), p.key, p.name, p.rating ?? '', p.tries, p.tags.join('; '), p.url ? base + p.url : '']);
+    return toCSV(['date', 'problem', 'name', 'rating', 'submissions_until_ac', 'tags', 'url'], rows);
+  }
+
+  /** Tabela de um grupo (amigos / instituição). */
+  function groupCSV(rows) {
+    const out = (rows || []).map((r) => {
+      const m = r.sum || {};
+      const t = (m.tryingNow || [])[0];
+      return [r.handle, r.rating ?? '', m.solved ?? '', m.solved7 ?? '', m.solved30 ?? '', m.solved90 ?? '', m.solved365 ?? '',
+        m.perDay30 != null ? m.perDay30.toFixed(2) : '', m.avgRecent ?? '', m.max30 ?? '', m.maxRating ?? '', m.streak ?? '', m.longestStreak ?? '',
+        m.firstTryRate != null ? (m.firstTryRate * 100).toFixed(1) : '', m.acRate != null ? (m.acRate * 100).toFixed(1) : '',
+        t ? t.name : '', isoDate(m.lastTs)];
+    });
+    return toCSV(['handle', 'rating', 'solved', 'solved_7d', 'solved_30d', 'solved_90d', 'solved_365d', 'per_day_30d', 'level', 'hardest_30d',
+      'hardest_ever', 'streak', 'best_streak', 'first_try_pct', 'acceptance_pct', 'trying_now', 'last_submission'], out);
+  }
+
+  /* ---------------------- quem resolveu (página do problema) ---------------------- */
+
+  /** Índice compacto: chave do problema → ts do 1º AC (positivo) ou da última tentativa (negativo). */
+  function solvedIndex(sum) {
+    const idx = {};
+    for (const t of sum.trying) idx[t.key] = -t.ts;
+    for (const p of sum.solvedList) idx[p.key] = p.ts;
+    return idx;
+  }
+
+  /** "/contest/1950/problem/A", "/problemset/problem/1950/A", "/gym/105020/problem/B" → "1950A". */
+  function problemKeyFromPath(path) {
+    const m = /^\/(?:contest|gym)\/(\d+)\/problem\/(\w+)/.exec(path) ||
+      /^\/problemset\/problem\/(\d+)\/(\w+)/.exec(path) ||
+      /^\/group\/[^/]+\/contest\/(\d+)\/problem\/(\w+)/.exec(path);
+    return m ? `${m[1]}${m[2].toUpperCase()}` : null;
+  }
+
   return {
     DAY,
     RANKS,
@@ -392,5 +576,13 @@
     heatColor,
     heatLegend,
     suggest,
+    contestStats,
+    tagStrength,
+    groupSummary,
+    toCSV,
+    solvedCSV,
+    groupCSV,
+    solvedIndex,
+    problemKeyFromPath,
   };
 });

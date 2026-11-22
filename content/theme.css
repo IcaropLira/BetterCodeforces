@@ -1493,3 +1493,100 @@ html[data-cfm-theme="dark"]:not([data-cfm="off"]) .cfm-an-delta.down { color: #f
 @media (prefers-reduced-motion: reduce) {
   .cfm-an-spin { animation: none; }
 }
+
+/* ==========================================================================
+   0.6.0 — exportação, gráficos extras e "Quem você conhece" (content/solvedby.js)
+   ========================================================================== */
+
+.cfm-an-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cfm-an-export-l { color: var(--an-muted); font-size: 12px; }
+.cfm-an-xbtn,
+html:not([data-cfm="off"]) .cfm-an-xbtn {
+  padding: 6px 10px !important;
+  border: 1px solid var(--an-border) !important;
+  border-radius: 8px !important;
+  background: var(--an-surface-2) !important;
+  color: var(--an-text) !important;
+  font: 600 12px/1 "Fira Code", ui-monospace, monospace !important;
+  cursor: pointer;
+  filter: none !important;
+}
+.cfm-an-xbtn:hover { border-color: var(--cfm-accent, #ee3d8b) !important; }
+.cfm-an-cmpside { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.cfm-an-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.cfm-an-two h4 { margin: 0 0 6px; font-size: 12px; color: var(--an-muted); font-weight: 600; }
+.cfm-an-two .cfm-an-list li { grid-template-columns: auto 1fr auto; }
+.cfm-an-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+.cfm-an-dl dt { color: var(--an-muted); }
+.cfm-an-dl dd { margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cfm-an-up { color: var(--cfm-an-ok); }
+.cfm-an-down { color: #e5484d; }
+html[data-cfm-theme="dark"]:not([data-cfm="off"]) .cfm-an-down { color: #ff6b6b; }
+
+.cfm-sb {
+  --an-surface: var(--surface, #ffffff);
+  --an-surface-2: var(--surface-2, #f1ecf7);
+  --an-border: var(--border, #e5ddef);
+  --an-text: var(--text, #1d1530);
+  --an-muted: var(--muted, #6c6185);
+  margin: 0 0 1em !important;
+  padding: 12px 12px 10px !important;
+  border: 1px solid var(--an-border) !important;
+  border-radius: 14px !important;
+  background:
+    radial-gradient(240px 90px at 0% 0%, color-mix(in srgb, var(--cfm-accent, #ee3d8b) 12%, transparent), transparent),
+    var(--an-surface) !important;
+  color: var(--an-text);
+  font: 400 12.5px/1.45 var(--cfm-ui, system-ui, sans-serif);
+}
+.cfm-sb-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.cfm-sb-title .cfm-mark { width: 18px; height: 18px; border-radius: 5px; }
+.cfm-sb-you { margin: 0 0 8px; padding: 6px 8px; border-radius: 9px; background: var(--an-surface-2); }
+.cfm-sb-you.is-ok { box-shadow: inset 3px 0 0 #2ea043; }
+.cfm-sb-you.is-tried { box-shadow: inset 3px 0 0 #e5a50a; }
+.cfm-sb-sec + .cfm-sb-sec { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--an-border); }
+.cfm-sb-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.cfm-sb-count { color: var(--an-muted); font-size: 11.5px; }
+.cfm-sb-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.cfm-sb-list li { display: flex; justify-content: space-between; gap: 8px; }
+.cfm-sb-list small,
+.cfm-sb-tried,
+.cfm-sb-empty,
+.cfm-sb-foot { color: var(--an-muted); font-size: 11.5px; }
+.cfm-sb-user { font-weight: 600; text-decoration: none !important; }
+.cfm-sb-more { color: var(--an-muted); cursor: help; }
+.cfm-sb-tried { margin: 6px 0 0; }
+.cfm-sb-empty { margin: 2px 0; }
+.cfm-sb-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+.cfm-sb-refresh,
+html:not([data-cfm="off"]) .cfm-sb-refresh {
+  padding: 3px 9px !important;
+  border: 1px solid var(--an-border) !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: var(--an-text) !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  cursor: pointer;
+  filter: none !important;
+}
+.cfm-sb-refresh:disabled { opacity: 0.5; cursor: default; }
