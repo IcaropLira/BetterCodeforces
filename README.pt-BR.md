@@ -29,6 +29,8 @@ Extensão para **Chrome e Firefox** que dá ao [Codeforces](https://codeforces.c
 - **College standings:** em qualquer standings, filtre por handle/equipe ou troque para *Minha instituição* — todo mundo da sua organização do Codeforces, com a posição dentro dela e a geral (contests normais); em gyms/grupos filtra a página aberta.
 - **Heatmap do perfil com modos:** pinte os quadradinhos verdes por problemas resolvidos, envios ou pela dificuldade máxima / média de cada dia.
 - **Hiraku Analytics** (`/profile/<handle>#hiraku`, "Analytics" no menu do topo): seus números e gráficos (dificuldade, meses, rating, tags, veredictos, linguagens, sequências), o que você está tentando agora, o que resolver em seguida e a comparação lado a lado com seus amigos e sua instituição.
+- **Quem você conhece em cada problema:** uma caixa na sidebar com o seu status e os amigos / colegas de instituição que resolveram ou tentaram.
+- **Exportar** os resolvidos de uma pessoa ou a comparação de um grupo inteiro em CSV ou JSON.
 - **Anti-spoiler:** tags e dificuldade borradas até passar o mouse.
 - **Esconder problemas resolvidos** na lista de problemas.
 

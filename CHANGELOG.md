@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.6.0
+- **"People you know" on every problem:** a box at the top of the problem sidebar shows whether you solved or tried it, and which of your friends and institution members (the 30 most active) solved it — with the date — or tried it. Each person's solved set is cached for 12 hours, so after the first load any problem opens instantly; missing people load in the background, you and your friends first.
+- **Export:** on the analytics page, download a person's solved problems as CSV (date, problem, rating, submissions until AC, tags, link) or everything on the page as JSON; on *Friends* / *Institution*, download the whole comparison table as CSV or JSON. CSVs open correctly in Excel (UTF-8 BOM) and are protected against formula injection.
+- **More analytics:** problems per day (30/90/365 days and on active days), first-try rate and submissions per solved, last 365/90 days, upsolve list (tried in a contest, never solved), contest stats (best place, best gain, worst drop, average change, last 5), pace, level per month, total solved over time, strong and weak tags (success rate per tag), solved by weekday and submissions by hour.
+- **Group summary** on *Friends* / *Institution*: people and active this week, total and per-person solved in 30 days, per person per day, average level, most active and longest streak; new *per day* column.
+
 ## 0.5.0
 - **Profile heatmap with modes:** the green squares on your Codeforces profile can now be colored by *problems solved*, *submissions*, *hardest problem of the day* or *average difficulty of the day* (in the rank colors). Pick it right above the calendar or in the popup; a legend and a tooltip per day (solved, submissions, hardest, average) come along. Count modes adapt their scale to your busiest day, like GitHub.
 - **Hiraku Analytics** (`/profile/<handle>#hiraku`, also in the top menu, on the profile and in the popup), for any handle:

@@ -235,6 +235,12 @@ async function analytics(scheme) {
     await page.goto(`https://codeforces.com/profile/${mock.OWNER}#hiraku`);
     await page.waitForSelector('.cfm-an-kpis', { timeout: 60000 });
     await page.waitForSelector('.cfm-an-sug .cfm-an-list li a[href^="/problemset/problem/"]', { timeout: 60000 }); // sugestões
+    // exportação da pessoa (CSV)
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.cfm-an-head .cfm-an-xbtn:first-of-type')]);
+    out.csvName = dl.suggestedFilename();
+    out.csv = readFileSync(await dl.path(), 'utf8');
+    const [dlj] = await Promise.all([page.waitForEvent('download'), page.click('.cfm-an-head .cfm-an-xbtn:last-of-type')]);
+    out.json = JSON.parse(readFileSync(await dlj.path(), 'utf8'));
     out.overview = await page.evaluate(() => ({
       kpis: document.querySelectorAll('.cfm-an-kpi').length,
       solved: document.querySelector('.cfm-an-kpi b')?.textContent,
@@ -255,7 +261,10 @@ async function analytics(scheme) {
       owner: document.querySelectorAll('table.cfm-an-table tr.is-owner').length,
       deltas: document.querySelectorAll('table.cfm-an-table .cfm-an-delta').length,
       chart: document.querySelectorAll('.cfm-an-hrow').length,
+      groupKpis: document.querySelectorAll('.cfm-an-kpi').length,
     }));
+    const [dlg] = await Promise.all([page.waitForEvent('download'), page.click('.cfm-an-cmpside .cfm-an-xbtn:first-of-type')]);
+    out.groupCsv = readFileSync(await dlg.path(), 'utf8');
     if (shots) await page.screenshot({ path: join(root, `e2e-friends-${scheme}.png`), fullPage: true });
 
     // ordenar por rating (clique no cabeçalho)
@@ -275,6 +284,17 @@ async function analytics(scheme) {
     await page.click('.cfm-an-back');
     await page.waitForFunction(() => !document.querySelector('.cfm-an'));
     out.back = await page.evaluate(() => getComputedStyle(document.getElementById('userbox')).display !== 'none' && getComputedStyle(document.getElementById('sidebar')).display !== 'none');
+
+    // página do problema: quem você conhece resolveu (os índices já estão em cache)
+    await page.goto(`https://codeforces.com/problemset/problem/${SB.contestId}/${SB.index}`);
+    await page.waitForSelector('.cfm-sb[data-state="done"]', { timeout: 120000 });
+    out.sb = await page.evaluate(() => ({
+      first: document.querySelector('#sidebar > :first-child')?.classList.contains('cfm-sb'),
+      you: document.querySelector('.cfm-sb-you')?.className,
+      solvers: Array.from(document.querySelectorAll('.cfm-sb-list .cfm-sb-user')).map((a) => a.textContent),
+      sections: Array.from(document.querySelectorAll('.cfm-sb-head b')).map((b) => b.textContent),
+    }));
+    if (shots) await page.screenshot({ path: join(root, `e2e-solvedby-${scheme}.png`) });
     return out;
   } finally {
     await ctx.close();
@@ -380,7 +400,15 @@ try {
     assert.deepEqual(t.back.sections, t.before.sections);
   });
 
-  const expected = createRequire(import.meta.url)('../shared/stats.js').summarize(mock.submissions(mock.OWNER));
+  const STATS = createRequire(import.meta.url)('../shared/stats.js');
+  const expected = STATS.summarize(mock.submissions(mock.OWNER));
+  // problema que mais amigos resolveram: é o que a caixa "Quem você conhece" vai mostrar
+  const others = [...new Set([...mock.FRIENDS, ...mock.ORG.members.filter((m) => m !== 'ghost404')])].filter((x) => x !== mock.OWNER);
+  const idx = Object.fromEntries(others.map((h) => [h, STATS.solvedIndex(STATS.summarize(mock.submissions(h)))]));
+  const count = {};
+  for (const h of others) for (const [k, v] of Object.entries(idx[h])) if (v > 0) count[k] = (count[k] || 0) + 1;
+  const best = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+  globalThis.SB = { key: best, contestId: best.match(/^\d+/)[0], index: best.replace(/^\d+/, ''), solvers: others.filter((h) => idx[h][best] > 0).sort(), you: expected.solvedList.some((p) => p.key === best) };
   for (const scheme of ['dark', 'light']) {
     const a = await analytics(scheme);
     console.log(`Heatmap e analytics (${scheme})`);
@@ -389,8 +417,7 @@ try {
     check('heatmap: legenda da contagem (5 níveis) e da dificuldade (7 ranks)', () => { assert.equal(a.legend, 5); assert.equal(a.maxLegend, 7); });
     check('heatmap: tooltip com resolvidos e envios do dia', () => assert.match(a.tip || '', /solved|resolvidos/));
     check('heatmap: voltar para "Cores do Codeforces" restaura o original', () => assert.equal(a.restored, a.before));
-    check('analytics: 8 números, gráficos e o total de resolvidos certo', () => {
-      assert.equal(a.overview.kpis, 8);
+    check('analytics: números, gráficos e o total de resolvidos certo', () => {
       assert.equal(a.overview.solved.replace(/\D/g, ''), String(expected.solved));
       assert.ok(a.overview.svgs >= 4, `${a.overview.svgs} gráficos`);
       assert.ok(a.overview.cards.length >= 9, a.overview.cards.join(', '));
@@ -411,6 +438,27 @@ try {
       assert.match(a.org.title || '', /UFCG/);
     });
     check('voltar ao perfil restaura a página', () => assert.ok(a.back));
+    check('analytics 0.6: 12 números e os cartões novos (upsolve, contests, ritmo, tags, semana, horas…)', () => {
+      assert.equal(a.overview.kpis, 12);
+      assert.ok(a.overview.cards.length >= 17, a.overview.cards.join(', '));
+    });
+    check('exportar pessoa: CSV dos resolvidos (com BOM) e JSON completo', () => {
+      assert.match(a.csvName, /^tester-solved-\d{4}-\d{2}-\d{2}\.csv$/);
+      assert.ok(a.csv.startsWith('\ufeffdate,problem,name,rating'));
+      assert.equal(a.csv.trim().split('\r\n').length, 1 + expected.solved);
+      assert.equal(a.json.handle, 'tester');
+      assert.equal(a.json.solved.length, expected.solved);
+      assert.ok(a.json.contests.count > 0);
+    });
+    check('exportar grupo: CSV com você e os amigos + resumo do grupo', () => {
+      assert.equal(a.groupCsv.trim().split('\r\n').length, 1 + mock.FRIENDS.length + 1);
+      assert.ok(a.friends.groupKpis >= 6);
+    });
+    check('problema: caixa "Quem você conhece" no topo da sidebar com quem resolveu', () => {
+      assert.ok(a.sb.first, 'primeira caixa da sidebar');
+      assert.deepEqual(a.sb.solvers.slice().sort(), SB.solvers, JSON.stringify({ sb: a.sb, SB }));
+      assert.equal(/is-ok/.test(a.sb.you), SB.you);
+    });
   }
 } finally {
   server.close();

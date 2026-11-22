@@ -20,6 +20,8 @@
     orgId: '',              // organização do college standings ('' = a do seu perfil)
     collegeDefault: false,  // abrir standings já filtrado pela instituição
     heatmapMode: 'cf',      // heatmap do perfil: cf | solved | subs | max | avg
+    solvedBy: true,         // página do problema: amigos/instituição que resolveram
+    solvedByOrg: true,      // ... incluindo os membros mais ativos da instituição
   };
 
   // `deepl` = código aceito pelo DeepL (ausente = DeepL não suporta).

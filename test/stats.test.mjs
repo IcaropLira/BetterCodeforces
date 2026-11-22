@@ -137,3 +137,89 @@ test('problemUrl: gym e problemset', () => {
   assert.equal(S.problemUrl({ contestId: 1950, index: 'B' }), '/problemset/problem/1950/B');
   assert.equal(S.problemUrl({ index: 'A' }), null);
 });
+
+test('métricas novas: médias diárias, 1ª tentativa, semana, horas, tags, upsolve', () => {
+  const contest = (ts, c, i, v, rating) => ({ ...sub(ts, c, i, v, { rating, tags: ['dp'] }), author: { participantType: 'CONTESTANT' } });
+  const subs = [
+    ...SUBS,
+    contest(at(2026, 11, 10), 300, 'A', 'OK', 1000),
+    contest(at(2026, 11, 10, 13), 300, 'B', 'WRONG_ANSWER', 1500), // upsolve pendente
+  ];
+  const s = S.summarize(subs, NOW);
+  assert.equal(s.solved30, 4);
+  assert.ok(Math.abs(s.perDay.d30 - 4 / 30) < 1e-9);
+  assert.equal(s.solvedDays30, 4);
+  assert.equal(s.perDay.active30, 1, 'um por dia nos dias em que resolveu');
+  assert.equal(s.firstTry, 4, '100A, 101C, 103A e 300A de primeira; 100B precisou de 2');
+  assert.equal(s.solvedList.find((p) => p.key === '100B').tries, 2);
+  assert.ok(Math.abs(s.triesPerSolved - 6 / 5) < 1e-9);
+  assert.equal(s.weekdaySolved.reduce((a, b) => a + b, 0), s.solved);
+  assert.equal(s.hours.reduce((a, b) => a + b, 0), s.total);
+  assert.deepEqual(s.tagStats.dp, { solved: 2, unsolved: 1 }, '101C e 300A resolvidos; 300B não (102D não tem tags)');
+  assert.deepEqual(s.upsolve.map((u) => u.key), ['300B']);
+  assert.equal(s.levelByMonth['2026-11'], Math.round((800 + 1200 + 1600 + 1000) / 4));
+  assert.equal(s.cumulative['2026-11'], s.solved);
+  assert.ok(s.cumulative['2026-10'] <= s.cumulative['2026-11']);
+});
+
+test('contestStats: melhor, pior, média e últimos 5', () => {
+  const r = (id, o, n, rank) => ({ contestId: id, contestName: `R${id}`, rank, oldRating: o, newRating: n });
+  const c = S.contestStats([r(1, 0, 900, 5000), r(2, 900, 1100, 2000), r(3, 1100, 1050, 3000)]);
+  assert.equal(c.count, 3);
+  assert.equal(c.best.d, 900);
+  assert.equal(c.worst.d, -50);
+  assert.equal(c.bestRank.rank, 2000);
+  assert.equal(c.current, 1050);
+  assert.equal(c.max, 1100);
+  assert.equal(c.positive, 2);
+  assert.equal(c.last5, 1050);
+  assert.deepEqual(S.contestStats([]), { count: 0 });
+});
+
+test('tagStrength e groupSummary', () => {
+  const t = S.tagStrength({ dp: { solved: 1, unsolved: 3 }, math: { solved: 5, unsolved: 0 }, rare: { solved: 1, unsolved: 0 } });
+  assert.deepEqual(t.map((x) => x.tag).sort(), ['dp', 'math'], 'tags com menos de 3 tentativas ficam de fora');
+  assert.equal(t.find((x) => x.tag === 'dp').rate, 0.25);
+  const g = S.groupSummary([
+    { handle: 'a', sum: { solved30: 30, solved7: 5, avgRecent: 1500, streak: 2 } },
+    { handle: 'b', sum: { solved30: 10, solved7: 0, avgRecent: 1100, streak: 9 } },
+    { handle: 'c' },
+  ]);
+  assert.equal(g.n, 2);
+  assert.equal(g.active7, 1);
+  assert.equal(g.total30, 40);
+  assert.equal(g.avg30, 20);
+  assert.equal(g.avgLevel, 1300);
+  assert.deepEqual(g.mostActive, { handle: 'a', n: 30 });
+  assert.deepEqual(g.longestStreak, { handle: 'b', n: 9 });
+  assert.deepEqual(S.groupSummary([]), { n: 0 });
+});
+
+test('exportação CSV: escape, BOM e proteção contra fórmulas', () => {
+  const csv = S.toCSV(['a', 'b'], [['x,y', 'say "hi"'], ['=HYPERLINK("x")', -5], [null, '\n']]);
+  assert.ok(csv.startsWith('\ufeffa,b\r\n'));
+  assert.match(csv, /"x,y","say ""hi"""/);
+  assert.match(csv, /'=HYPERLINK\(""x""\)/);
+  assert.match(csv, /,-5\r\n/, 'números negativos não são tratados como fórmula');
+  const s = S.summarize(SUBS, NOW);
+  const raw = S.solvedCSV(s);
+  assert.ok(raw.startsWith('\ufeffdate,problem,name,rating'), 'BOM + cabeçalho');
+  const solved = raw.trim().split('\r\n');
+  assert.equal(solved.length, 1 + s.solved);
+  assert.match(solved[1], /^2026-09-01,103A,/);
+  const group = S.groupCSV([{ handle: 'tester', rating: 1350, sum: S.compact(s) }]).trim().split('\r\n');
+  assert.equal(group.length, 2);
+  assert.match(group[1], /^tester,1350,4,3,3,/);
+});
+
+test('solvedIndex e problemKeyFromPath (página do problema)', () => {
+  const idx = S.solvedIndex(S.summarize(SUBS, NOW));
+  assert.ok(idx['100A'] > 0, 'resolvido: ts positivo');
+  assert.ok(idx['102D'] < 0, 'só tentou: ts negativo');
+  assert.equal(idx['999Z'], undefined);
+  assert.equal(S.problemKeyFromPath('/contest/1950/problem/A'), '1950A');
+  assert.equal(S.problemKeyFromPath('/problemset/problem/1950/b1'), '1950B1');
+  assert.equal(S.problemKeyFromPath('/gym/105020/problem/B'), '105020B');
+  assert.equal(S.problemKeyFromPath('/group/abc/contest/123/problem/C'), '123C');
+  assert.equal(S.problemKeyFromPath('/contest/1950/standings'), null);
+});

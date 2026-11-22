@@ -103,5 +103,12 @@ export function handle(pathname, searchParams, res, profileHtml) {
     return html(res, `<!doctype html><title>Rating - Codeforces</title><div class="datatable"><table>${ORG.members.map((m) => `<tr><td>${userLink(m)}</td></tr>`).join('')}</table></div>`), true;
   }
   if (/^\/profile\/[^/]+$/.test(pathname)) return html(res, profileHtml), true;
+  const pm = /^\/problemset\/problem\/(\d+)\/\w+$/.exec(pathname);
+  if (pm && Number(pm[1]) >= 1900) { // só os problemas do mock (os outros testes usam fixtures próprias)
+    return html(res, `<!doctype html><title>Problem - Codeforces</title>
+<div id="header"><div class="lang-chooser"><a href="/profile/${OWNER}">${OWNER}</a></div></div>
+<div id="body"><div id="sidebar" style="float:right;width:280px"><div class="roundbox">Contest box</div></div>
+<div id="pageContent" style="margin-right:300px"><div class="problem-statement"><div class="header"><div class="title">A. Problem</div></div><p>Statement.</p></div></div></div>`), true;
+  }
   return false;
 }

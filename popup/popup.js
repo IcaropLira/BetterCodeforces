@@ -116,7 +116,7 @@
     $('autoTranslate').checked = s.autoTranslate;
     $('autoTranslate').addEventListener('change', (e) => save({ autoTranslate: e.target.checked }));
 
-    for (const id of ['hideTags', 'hideSolved', 'collegeDefault']) {
+    for (const id of ['hideTags', 'hideSolved', 'collegeDefault', 'solvedBy', 'solvedByOrg']) {
       $(id).checked = !!s[id];
       $(id).addEventListener('change', (e) => save({ [id]: e.target.checked }));
     }

@@ -39,7 +39,7 @@ test('changelog-notes: usa docs/release-notes/v<versão>.md quando existe', asyn
   const { execFileSync } = await import('node:child_process');
   const { fileURLToPath } = await import('node:url');
   const script = fileURLToPath(new URL('../scripts/changelog-notes.mjs', import.meta.url));
-  const custom = execFileSync('node', [script, 'v0.5.0'], { encoding: 'utf8' });
+  const custom = execFileSync('node', [script, 'v0.6.0'], { encoding: 'utf8' });
   assert.match(custom, /Hiraku Analytics/);
   assert.match(custom, /What's new/);
   const fromChangelog = execFileSync('node', [script, '0.4.0'], { encoding: 'utf8' });

@@ -80,7 +80,7 @@ li::before { content: "✦"; color: #ff8db8; margin-right: 12px; }
 .card img { display: block; width: 100%; }
 </style></head><body>${SG}<div class="glow"></div>
 <div class="copy"><p class="k" style="margin:0 0 14px">// hiraku codeforces</p><h1>Make Codeforces<em>yours.</em></h1>
-<ul><li>Light, dark or automatic theme</li><li>Analytics: you vs friends and institution</li><li>Heatmap by solved or difficulty</li><li>College standings for your institution</li><li>Math-safe statement translation</li></ul></div>
+<ul><li>Analytics: you vs friends and institution</li><li>Who you know solved each problem</li><li>Export people and groups to CSV</li><li>College standings and difficulty heatmap</li><li>Math-safe translation, light or dark</li></ul></div>
 <div class="card" style="left:620px; top:50px"><img src="${dark}"></div>
 <div class="card" style="left:940px; top:120px"><img src="${light}"></div>
 <p class="fine">Unofficial extension — not affiliated with Codeforces</p></body></html>`;
